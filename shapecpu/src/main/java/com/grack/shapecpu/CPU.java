@@ -14,10 +14,10 @@ public class CPU {
 	private Word CMP_CONSTANT;
 	private Word[] memory;
 
-	public CPU(Function fn) {
-		MEMORY_READ = ONE = fn.encodeBit(1);
-		CMP_CONSTANT = fn.encodeWord(0b1000_0000);
-		ZERO = fn.encodeBit(0);
+	public CPU(NativeBitFactory factory) {
+		MEMORY_READ = ONE = factory.encodeBit(1);
+		CMP_CONSTANT = factory.encodeWord(0b1000_0000);
+		ZERO = factory.encodeBit(0);
 	}
 
 	private Word memory_access(Word addr, Word ac, Bit rw) {
@@ -32,8 +32,13 @@ public class CPU {
 				b1 = b1.or(r[row].and(memory[row]));
 			}
 		}
-	
+
 		return b1;
+	}
+
+	private WordAndBit add_with_carry(Word a, Word b, Bit carry) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	public void tick() {
@@ -55,7 +60,8 @@ public class CPU {
 		Bit cmd_jmp = b1.bitsEq(11, 8, 11); // Branch unconditionally
 		Bit cmd_la = b1.bitsEq(11, 8, 12); // Load indirect
 		Bit cmd_bmi = b1.bitsEq(11, 8, 13); // Branch if alu_minus
-		Bit cmd_cmp = b1.bitsEq(11, 8, 14); // Compare ac with immediate or indirect
+		Bit cmd_cmp = b1.bitsEq(11, 8, 14); // Compare ac with immediate or
+											// indirect
 
 		// Address?
 		Bit cmd_a = b1.bit(12);
@@ -65,26 +71,26 @@ public class CPU {
 		Word b_cmp = cmd_a.ifThen(b1, load_arg).not().add(CMP_CONSTANT).add(ac);
 
 		// ROL
-		Bit carry_rol= ac.bit(0);
+		Bit carry_rol = ac.bit(0);
 		Word b_rol = ac.bits(7, 1);
-		b_rol.setBit(7, alu_carry);
+		b_rol = b_rol.setBit(7, alu_carry);
 
 		// ROR
 		Bit carry_ror = ac.bit(7);
 		Word b_ror = ac.bits(6, 0).shl(1);
-		b_ror.setBit(0, alu_carry);
+		b_ror = b_rol.setBit(0, alu_carry);
 
 		// ADD
-		b_add_1, carry_1 =add_with_carry(ac,b1,alu_carry);
-		b_add_2, carry_2 =add_with_carry(ac,load_arg,alu_carry);		
-		Word b_add = cmd_a.ifThen(b_add_1, b_add_2);
-		Bit carry_add = cmd_a.ifThen(carry_1, carry_2);
+		WordAndBit add_1 = add_with_carry(ac, b1, alu_carry);
+		WordAndBit add_2 = add_with_carry(ac, load_arg, alu_carry);
+		Word b_add = cmd_a.ifThen(add_1.getWord(), add_2.getWord());
+		Bit carry_add = cmd_a.ifThen(add_1.getBit(), add_2.getBit());
 
 		Word load_val = memory_access(b1, ac, cmd_store.not());
-		 
-		Bit ac_unchanged = cmd_sec.or(cmd_clc).or(cmd_beq)
-				.or(cmd_bmi).or(cmd_cmp).or(cmd_jmp).or(cmd_store);
-		
+
+		Bit ac_unchanged = cmd_sec.or(cmd_clc).or(cmd_beq).or(cmd_bmi)
+				.or(cmd_cmp).or(cmd_jmp).or(cmd_store);
+
 		Word ac_new;
 		ac_new = cmd_load.and(cmd_param);
 		ac_new = ac_new.or(cmd_ror.and(b_ror));
@@ -96,22 +102,26 @@ public class CPU {
 		ac_new = ac_new.or(cmd_la.and(load_val));
 		ac_new = ac_new.or(ac_unchanged.and(ac));
 
-		alu_zero = (cmd_cmp.ifThen(b_cmp.eq(0), ac.eq(0)).or(alu_zero.and(cmd_bmi.or(cmd_beq))));
+		alu_zero = (cmd_cmp.ifThen(b_cmp.eq(0), ac.eq(0)).or(alu_zero
+				.and(cmd_bmi.or(cmd_beq))));
 
 		alu_minus = cmd_cmp.ifThen(b_cmp.bit(7), alu_minus);
 
-		alu_carry = 
-			cmd_add.ifThen(carry_add, 
-					cmd_rol.ifThen(carry_rol, 
-							cmd_ror.ifThen(carry_ror, 
-									cmd_clc.ifThen(ZERO, 
-											cmd_sec.ifThen(ONE, alu_carry)))));
+		alu_carry = cmd_add.ifThen(
+				carry_add,
+				cmd_rol.ifThen(
+						carry_rol,
+						cmd_ror.ifThen(
+								carry_ror,
+								cmd_clc.ifThen(ZERO,
+										cmd_sec.ifThen(ONE, alu_carry)))));
 
 		Word pc_linear = pc.add(ONE);
 
-		pc = 
-			cmd_beq.ifThen(alu_zero.ifThen(cmd_param, pc_linear),
-					cmd_bmi.ifThen(alu_minus.ifThen(cmd_param, pc_linear), 
-							cmd_jmp.ifThen(cmd_param, pc_linear)));
+		pc = cmd_beq.ifThen(
+				alu_zero.ifThen(cmd_param, pc_linear),
+				cmd_bmi.ifThen(alu_minus.ifThen(cmd_param, pc_linear),
+						cmd_jmp.ifThen(cmd_param, pc_linear)));
 	}
+
 }
