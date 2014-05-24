@@ -1,0 +1,132 @@
+#define WORD_SIZE 13
+#define MEMORY_ADDR_SIZE 8
+#define MEMORY_SIZE 256
+
+#define word vector<WORD_SIZE>
+#define addr vector<MEMORY_ADDR_SIZE>
+
+#define MEMORY_READ 1
+#define MEMORY_WRITE 0
+
+addr pc;
+word ac;
+
+bit alu_minus;
+bit alu_carry;
+bit alu_zero;
+
+word[ARRAY_ROWS] memory;
+
+(word, bit) add_with_carry(word a, word b, bit carry) {
+	word res;
+	bit c = carry;
+
+	for (i : 0..8) {
+		res[i], c = fulladd(a[i], b[i], c);
+	}
+
+	return res[i], c;
+}
+
+word memory_access(memory addr, word target, bit rw) {
+	bit[ARRAY_ROWS] r;
+	word b1;
+
+for (row : 0..MEMORY_SIZE) {
+r[row] = (addr == row);
+		memory[row] = (r[row] & rw) ? reg : memory[row];
+		b1 = b1 | (r[row] & memory[row]);
+}
+
+return b1;
+}
+
+void tick() {
+word b1=memory_access(pc, ac, MEMORY_READ);
+word load_arg=memory_access(b1, ac, MEMORY_READ);
+
+// Decode
+bit cmd_store = b1[11:8] == 0; // Store ac to memory
+bit cmd_load = b1[11:8] == 1; // Load memory to ac
+bit cmd_rol = b1[11:8] == 2; // Rotate left through alu_carry
+bit cmd_ror = b1[11:8] == 3; // Rotate right through alu_carry
+bit cmd_add = b1[11:8] == 4; // Add ac to immediate or indirect
+bit cmd_clc = b1[11:8] == 5; // Clear carry
+bit cmd_sec = b1[11:8] == 6; // Set carry
+bit cmd_xor = b1[11:8] == 7; // XOR ac with immediate
+bit cmd_and = b1[11:8] == 8; // AND ac with immediate
+bit cmd_or = b1[11:8] == 9; // OR ac with immediate
+bit cmd_beq = b1[11:8] == 10; // Branch if alu_zero
+bit cmd_jmp = b1[11:8] == 11; // Branch unconditionally
+bit cmd_la = b1[11:8] == 12; // Load indirect
+bit cmd_bmi = b1[11:8] == 13; // Branch if alu_minus
+bit cmd_cmp = b1[11:8] == 14; // Compare ac with immediate or indirect
+
+// Address?
+bit cmd_a = b1[12];
+
+// CMP
+word b_cmp = !( cmd_a ? b1 : load_arg ) + 10000000b + ac
+
+// ROL
+bit carry_rol=ac[0];
+b_rol[6:0] = ac[7:1]
+b_rol[7]=alu_carry;
+
+// ROR
+bit carry_ror=ac[7];
+b_ror[7:1] = ac[6:0];
+b_ror[0]=alu_carry;
+
+// ADD
+b_add_1, carry_1 =add_with_carry(ac,b1,alu_carry);
+b_add_2, carry_2 =add_with_carry(ac,load_arg,alu_carry);		
+word b_add = cmd_a ? b_add_1 : b_add_2
+bit carry_add = cmd_a ? carry_1 : carry_2;
+
+word load_val=memory_access(b1, ac, !(cmd_store));
+ 
+ac = 
+cmd_load & b1 |
+	cmd_ror & b_ror |
+	cmd_rol & b_rol |
+	cmd_sec & ac |
+	cmd_clc & ac |
+	cmd_add & b_add |
+	cmd_and & (ac & b1[8:0]) |
+	cmd_xor & (ac ^ b1[8:0]) |
+	cmd_or & (ac | b1[8:0]) |
+	cmd_store & ac |
+	cmd_la & load_val |
+	cmd_beq | cmd_bmi | cmd_cmp | cmd_jmp & ac;
+
+
+alu_zero = (cmd_cmp ? b_cmp == 0 : ac == 0) | (alu_zero & (cmd_bmi | cmd_beq))
+
+alu_minus = cmd_cmp ? b_cmp[7] : alu_minus
+
+alu_carry = 
+cmd_add ? carry_add :
+cmd_rol ? carry_rol :
+cmd_ror ? carry_ror :
+cmd_clc ? 0 :
+cmd_sec ? 1 :
+alu_carry;
+
+word pc_linear = pc + 1
+
+pc = 
+cmd_beq ? (alu_zero ? b1[8:0] : pc_linear) :
+	cmd_bmi ? (alu_minus ? b1[8:0] : pc_linear) :
+	cmd_jmp ? b1[8:0]) :
+	pc_linear;
+
+}
+
+			
+
+			
+
+
+
+
