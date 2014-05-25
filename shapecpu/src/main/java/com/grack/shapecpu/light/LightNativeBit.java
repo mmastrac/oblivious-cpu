@@ -18,17 +18,30 @@ public class LightNativeBit implements NativeBit {
 	@Override
 	public NativeBit xor(NativeBit n) {
 		LightNativeBit other = (LightNativeBit)n;
-		return new LightNativeBit(factory, value ^ other.value);
+		return new LightNativeBit(factory, scramble(value ^ other.value));
 	}
 
 	@Override
 	public NativeBit and(NativeBit n) {
 		LightNativeBit other = (LightNativeBit)n;
-		return new LightNativeBit(factory, value & other.value);
+		return new LightNativeBit(factory, scramble(value & other.value));
 	}
 	
 	@Override
 	public NativeBitFactory factory() {
 		return factory;
+	}
+
+	private int scramble(int value) {
+		return factory.scramble(value);
+	}
+
+	public int value() {
+		return value;
+	}
+	
+	@Override
+	public String toString() {
+		return Integer.toString(factory.extract(this));
 	}
 }

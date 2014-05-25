@@ -41,4 +41,13 @@ public class Bit {
 	public Bit xor(Bit b) {
 		return new Bit(nativeBit.xor(b.nativeBit));
 	}
+	
+	public NativeBit nativeBit() {
+		return nativeBit;
+	}
+	
+	@Override
+	public String toString() {
+		return nativeBit.toString();
+	}
 }

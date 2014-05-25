@@ -3,34 +3,42 @@ package com.grack.shapecpu;
 public class CPU {
 	private static final int MEMORY_SIZE = 256;
 	private final Bit MEMORY_READ;
+	private final Bit ZERO;
+	private final Bit ONE;
+	private final int CMP_CONSTANT = 0b1000_0000;
+
 	private Word pc;
 	private Word ac;
 
 	private Bit alu_carry;
 	private Bit alu_minus;
 	private Bit alu_zero;
-	private Bit ZERO;
-	private Bit ONE;
-	private Word CMP_CONSTANT;
 	private Word[] memory;
 
 	public CPU(NativeBitFactory factory) {
 		MEMORY_READ = ONE = factory.encodeBit(1);
-		CMP_CONSTANT = factory.encodeWord(0b1000_0000);
 		ZERO = factory.encodeBit(0);
+
+		ac = factory.encodeWord(0, 8);
+		pc = factory.encodeWord(0, 8);
+		memory = new Word[MEMORY_SIZE];
+		for (int i = 0; i < MEMORY_SIZE; i++) {
+			memory[i] = factory.encodeWord(0, 13);
+		}
 	}
 
 	private Word memory_access(Word addr, Word ac, Bit rw) {
 		Bit[] r = new Bit[MEMORY_SIZE];
-		Word b1 = addr.eq(0).and(memory[0]);
+		
+		// Unroll the first time through the loop
+		r[0] = addr.eq(0);
+		Word b1 = r[0].and(memory[0]);
+		memory[0] = (r[0].and(rw)).ifThen(ac, memory[0]);
 
-		for (int row = 0; row < MEMORY_SIZE; row++) {
+		for (int row = 1; row < MEMORY_SIZE; row++) {
 			r[row] = addr.eq(row);
 			memory[row] = (r[row].and(rw)).ifThen(ac, memory[row]);
-
-			if (row != 0) {
-				b1 = b1.or(r[row].and(memory[row]));
-			}
+			b1 = b1.or(r[row].and(memory[row]));
 		}
 
 		return b1;
@@ -116,12 +124,11 @@ public class CPU {
 								cmd_clc.ifThen(ZERO,
 										cmd_sec.ifThen(ONE, alu_carry)))));
 
-		Word pc_linear = pc.add(ONE);
+		Word pc_linear = pc.add(1);
 
 		pc = cmd_beq.ifThen(
 				alu_zero.ifThen(cmd_param, pc_linear),
 				cmd_bmi.ifThen(alu_minus.ifThen(cmd_param, pc_linear),
 						cmd_jmp.ifThen(cmd_param, pc_linear)));
 	}
-
 }

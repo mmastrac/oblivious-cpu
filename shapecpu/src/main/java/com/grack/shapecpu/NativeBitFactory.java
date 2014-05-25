@@ -7,7 +7,12 @@ public interface NativeBitFactory {
 		return new Bit(encodeNativeBit(bit));
 	}
 	
-	default Word encodeWord(int word) {
-		return null;
+	default Word encodeWord(long word, int size) {
+		Bit[] bits = new Bit[size];
+		for (int i = 0; i < size; i++) {
+			bits[i] = encodeBit((int) ((word & (1 << i)) >> i));
+		}
+		
+		return new Word(bits);
 	}
 }
