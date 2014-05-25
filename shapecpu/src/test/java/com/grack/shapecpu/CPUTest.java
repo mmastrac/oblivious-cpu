@@ -10,4 +10,11 @@ public class CPUTest {
 		CPU cpu = new CPU(new LightNativeBitFactory());
 		cpu.tick();
 	}
+
+	@Test
+	public void cpuTicksTwice() {
+		CPU cpu = new CPU(new LightNativeBitFactory());
+		cpu.tick();
+		cpu.tick();
+	}
 }

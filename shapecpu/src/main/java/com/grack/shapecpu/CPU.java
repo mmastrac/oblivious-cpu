@@ -1,11 +1,16 @@
 package com.grack.shapecpu;
 
+import java.io.IOException;
+
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
+
 public class CPU {
 	private static final int MEMORY_SIZE = 256;
 	private final Bit MEMORY_READ;
 	private final Bit ZERO;
 	private final Bit ONE;
-	private final int CMP_CONSTANT = 0b1000_0000;
+	private final Word CMP_CONSTANT;
 
 	private Word pc;
 	private Word ac;
@@ -18,18 +23,41 @@ public class CPU {
 	public CPU(NativeBitFactory factory) {
 		MEMORY_READ = ONE = factory.encodeBit(1);
 		ZERO = factory.encodeBit(0);
+		CMP_CONSTANT = factory.encodeWord(0b1000_0000, 8);
 
 		ac = factory.encodeWord(0, 8);
 		pc = factory.encodeWord(0, 8);
+		alu_carry = ZERO;
+		alu_minus = ZERO;
+		alu_zero = ZERO;
+		
 		memory = new Word[MEMORY_SIZE];
 		for (int i = 0; i < MEMORY_SIZE; i++) {
 			memory[i] = factory.encodeWord(0, 13);
+		}
+
+		try {
+			String mem = Resources.toString(getClass()
+					.getResource("memory.txt"), Charsets.UTF_8);
+			String[] memoryContents = mem.trim().split("\n");
+			for (int i = 0; i < memoryContents.length; i++) {
+				String line = memoryContents[i];
+				String[] bytes = line.split(" ");
+				int value = 0;
+				for (int j = 0; j < 13; j++) {
+					value |= (Integer.valueOf(bytes[j], 16) & 1) << j;
+				}
+
+				memory[i] = factory.encodeWord(value, 13);
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
 	private Word memory_access(Word addr, Word ac, Bit rw) {
 		Bit[] r = new Bit[MEMORY_SIZE];
-		
+
 		// Unroll the first time through the loop
 		r[0] = addr.eq(0);
 		Word b1 = r[0].and(memory[0]);
@@ -44,32 +72,29 @@ public class CPU {
 		return b1;
 	}
 
-	private WordAndBit add_with_carry(Word a, Word b, Bit carry) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	public void tick() {
 		Word b1 = memory_access(pc, ac, MEMORY_READ);
 		Word load_arg = memory_access(b1, ac, MEMORY_READ);
 
+		Word cmd = b1.bits(11, 8).reverse();
+
 		// Decode
-		Bit cmd_store = b1.bitsEq(11, 8, 0); // Store ac to memory
-		Bit cmd_load = b1.bitsEq(11, 8, 1); // Load memory to ac
-		Bit cmd_rol = b1.bitsEq(11, 8, 2); // Rotate left through alu_carry
-		Bit cmd_ror = b1.bitsEq(11, 8, 3); // Rotate right through alu_carry
-		Bit cmd_add = b1.bitsEq(11, 8, 4); // Add ac to immediate or indirect
-		Bit cmd_clc = b1.bitsEq(11, 8, 5); // Clear carry
-		Bit cmd_sec = b1.bitsEq(11, 8, 6); // Set carry
-		Bit cmd_xor = b1.bitsEq(11, 8, 7); // XOR ac with immediate
-		Bit cmd_and = b1.bitsEq(11, 8, 8); // AND ac with immediate
-		Bit cmd_or = b1.bitsEq(11, 8, 9); // OR ac with immediate
-		Bit cmd_beq = b1.bitsEq(11, 8, 10); // Branch if alu_zero
-		Bit cmd_jmp = b1.bitsEq(11, 8, 11); // Branch unconditionally
-		Bit cmd_la = b1.bitsEq(11, 8, 12); // Load indirect
-		Bit cmd_bmi = b1.bitsEq(11, 8, 13); // Branch if alu_minus
-		Bit cmd_cmp = b1.bitsEq(11, 8, 14); // Compare ac with immediate or
-											// indirect
+		Bit cmd_store = cmd.eq(0); // Store ac to memory
+		Bit cmd_load = cmd.eq(1); // Load memory to ac
+		Bit cmd_rol = cmd.eq(2); // Rotate left through alu_carry
+		Bit cmd_ror = cmd.eq(3); // Rotate right through alu_carry
+		Bit cmd_add = cmd.eq(4); // Add ac to immediate or indirect
+		Bit cmd_clc = cmd.eq(5); // Clear carry
+		Bit cmd_sec = cmd.eq(6); // Set carry
+		Bit cmd_xor = cmd.eq(7); // XOR ac with immediate
+		Bit cmd_and = cmd.eq(8); // AND ac with immediate
+		Bit cmd_or = cmd.eq(9); // OR ac with immediate
+		Bit cmd_beq = cmd.eq(10); // Branch if alu_zero
+		Bit cmd_jmp = cmd.eq(11); // Branch unconditionally
+		Bit cmd_la = cmd.eq(12); // Load indirect
+		Bit cmd_bmi = cmd.eq(13); // Branch if alu_minus
+		Bit cmd_cmp = cmd.eq(14); // Compare ac with immediate or
+									// indirect
 
 		// Address?
 		Bit cmd_a = b1.bit(12);
@@ -89,8 +114,8 @@ public class CPU {
 		b_ror = b_rol.setBit(0, alu_carry);
 
 		// ADD
-		WordAndBit add_1 = add_with_carry(ac, b1, alu_carry);
-		WordAndBit add_2 = add_with_carry(ac, load_arg, alu_carry);
+		WordAndBit add_1 = ac.addWithCarry(b1, alu_carry);
+		WordAndBit add_2 = ac.addWithCarry(load_arg, alu_carry);
 		Word b_add = cmd_a.ifThen(add_1.getWord(), add_2.getWord());
 		Bit carry_add = cmd_a.ifThen(add_1.getBit(), add_2.getBit());
 
@@ -124,7 +149,7 @@ public class CPU {
 								cmd_clc.ifThen(ZERO,
 										cmd_sec.ifThen(ONE, alu_carry)))));
 
-		Word pc_linear = pc.add(1);
+		Word pc_linear = pc.add(ONE);
 
 		pc = cmd_beq.ifThen(
 				alu_zero.ifThen(cmd_param, pc_linear),

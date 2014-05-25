@@ -20,14 +20,14 @@ public class BitTest {
 	}
 
 	@Test
-	public void andWorks() {
+	public void and() {
 		assertEquals(1, factory.extract(one.and(one)));
 		assertEquals(0, factory.extract(one.and(zero)));
 		assertEquals(0, factory.extract(zero.and(one)));
 	}
 
 	@Test
-	public void orWorks() {
+	public void or() {
 		assertEquals(0, factory.extract(zero.or(zero)));
 		assertEquals(1, factory.extract(one.or(one)));
 		assertEquals(1, factory.extract(one.or(zero)));
@@ -35,14 +35,72 @@ public class BitTest {
 	}
 
 	@Test
-	public void xorWorks() {
+	public void xor() {
 		assertEquals(0, factory.extract(one.xor(one)));
 		assertEquals(1, factory.extract(one.xor(zero)));
 		assertEquals(1, factory.extract(zero.xor(one)));
 	}
 	
 	@Test
-	public void ifThenWorks() {
+	public void halfAdd() {
+		BitAndBit b1;
+		
+		b1 = one.halfAdd(one);
+		assertEquals(0, factory.extract(b1.getBit1()));
+		assertEquals(1, factory.extract(b1.getBit2()));
+
+		b1 = one.halfAdd(zero);
+		assertEquals(1, factory.extract(b1.getBit1()));
+		assertEquals(0, factory.extract(b1.getBit2()));
+
+		b1 = zero.halfAdd(one);
+		assertEquals(1, factory.extract(b1.getBit1()));
+		assertEquals(0, factory.extract(b1.getBit2()));
+
+		b1 = zero.halfAdd(zero);
+		assertEquals(0, factory.extract(b1.getBit1()));
+		assertEquals(0, factory.extract(b1.getBit2()));
+	}
+
+	@Test
+	public void fullAdd() {
+		BitAndBit b1;
+
+		b1 = one.fullAdd(zero, zero);
+		assertEquals(1, factory.extract(b1.getBit1()));
+		assertEquals(0, factory.extract(b1.getBit2()));
+
+		b1 = one.fullAdd(one, one);
+		assertEquals(1, factory.extract(b1.getBit1()));
+		assertEquals(1, factory.extract(b1.getBit2()));
+
+		b1 = one.fullAdd(one, zero);
+		assertEquals(0, factory.extract(b1.getBit1()));
+		assertEquals(1, factory.extract(b1.getBit2()));
+
+		b1 = one.fullAdd(zero, one);
+		assertEquals(0, factory.extract(b1.getBit1()));
+		assertEquals(1, factory.extract(b1.getBit2()));
+
+		b1 = zero.fullAdd(one, one);
+		assertEquals(0, factory.extract(b1.getBit1()));
+		assertEquals(1, factory.extract(b1.getBit2()));
+
+		b1 = zero.fullAdd(one, zero);
+		assertEquals(1, factory.extract(b1.getBit1()));
+		assertEquals(0, factory.extract(b1.getBit2()));
+
+		b1 = zero.fullAdd(zero, one);
+		assertEquals(1, factory.extract(b1.getBit1()));
+		assertEquals(0, factory.extract(b1.getBit2()));
+
+		b1 = zero.fullAdd(zero, zero);
+		assertEquals(0, factory.extract(b1.getBit1()));
+		assertEquals(0, factory.extract(b1.getBit2()));
+	}
+	
+	@Test
+	public void ifThen() {
 		assertEquals(1, factory.extract(one.ifThen(one, zero)));
 		assertEquals(0, factory.extract(one.ifThen(zero, one)));
 		assertEquals(1, factory.extract(zero.ifThen(zero, one)));
