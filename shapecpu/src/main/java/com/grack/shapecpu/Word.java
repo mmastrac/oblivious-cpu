@@ -189,10 +189,9 @@ public class Word {
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		for (Bit bit : bits) {
-			builder.append(bit);
-		}
-		
+		for (int i = 0; i < bits.length; i++) {
+			builder.append(bit(bits.length - i - 1));
+		}		
 		return builder.toString();
 	}
 
