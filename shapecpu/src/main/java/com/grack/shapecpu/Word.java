@@ -18,7 +18,7 @@ public class Word {
 	public WordAndBit addWithCarry(Word n, Bit carry) {
 		Preconditions.checkNotNull(n);
 		Preconditions.checkNotNull(carry);
-		
+
 		int size = Math.max(size(), n.size());
 		Bit[] bits = new Bit[size];
 
@@ -35,13 +35,13 @@ public class Word {
 			carry = result.getBit2();
 			bits[i] = result.getBit1();
 		}
-		
+
 		return new WordAndBit(new Word(bits), carry);
 	}
 
 	public Word add(Word n) {
 		Preconditions.checkNotNull(n);
-		
+
 		int size = Math.max(size(), n.size());
 		Bit[] bits = new Bit[size];
 
@@ -63,13 +63,13 @@ public class Word {
 			carry = result.getBit2();
 			bits[i] = result.getBit1();
 		}
-		
+
 		return new Word(bits);
 	}
 
 	public Word and(Word n) {
 		Preconditions.checkNotNull(n);
-		
+
 		int size = Math.min(size(), n.size());
 
 		Bit[] bits = new Bit[size];
@@ -93,7 +93,7 @@ public class Word {
 		for (int i = bottomBit; i <= topBit; i++) {
 			bits[i - bottomBit] = bit(i);
 		}
-		
+
 		return new Word(bits);
 	}
 
@@ -110,7 +110,7 @@ public class Word {
 				result = result.and(bit(i).not());
 			}
 		}
-		
+
 		return result;
 	}
 
@@ -162,8 +162,10 @@ public class Word {
 		return new Word(bits);
 	}
 
-	public Word shl(int i) {
-		return null;
+	public Word shl(int n) {
+		Bit[] bits = new Bit[size()];
+		System.arraycopy(this.bits, 0, bits, n, size() - n);
+		return new Word(bits);
 	}
 
 	public Word xor(Word n) {
@@ -185,13 +187,13 @@ public class Word {
 	public int size() {
 		return bits.length;
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		for (int i = 0; i < bits.length; i++) {
 			builder.append(bit(bits.length - i - 1));
-		}		
+		}
 		return builder.toString();
 	}
 
@@ -200,7 +202,7 @@ public class Word {
 		for (int i = 0; i < bits.length; i++) {
 			bits[i] = bit(bits.length - i - 1);
 		}
-		
+
 		return new Word(bits);
 	}
 
