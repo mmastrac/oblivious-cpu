@@ -31,7 +31,7 @@ public class CPUTest {
 	@Test
 	public void cpuTicksUntilDone() {
 		LightNativeBitFactory factory = new LightNativeBitFactory();
-		CPU cpu = new CPU(factory, false);
+		CPU cpu = new CPU(factory, true);
 		long lastPC = -1;
 		for (int i = 0; i < 20000; i++) {
 			long pc = factory.extract(cpu.pc);

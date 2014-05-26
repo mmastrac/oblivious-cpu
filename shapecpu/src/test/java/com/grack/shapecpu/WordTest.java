@@ -178,4 +178,26 @@ public class WordTest {
 		assertEquals(1, factory.extract(zero.ifThen(zero, one)));
 		assertEquals(0, factory.extract(zero.ifThen(one, zero)));
 	}
+	
+	@Test
+	public void compare() {
+		Word a = factory.encodeWord(10, 8);
+		Word b = factory.encodeWord(8, 8);
+		Word highBit = factory.encodeWord(0b00000001, 8);
+
+		// b is loaded, compare a
+		Word compare1 = a.not().add(highBit).add(b);
+		// minus
+		assertEquals(1, factory.extract(compare1.bit(7)));
+
+		// a is loaded, compare b
+		Word compare2 = b.not().add(highBit).add(a);
+		// not minus
+		assertEquals(0, factory.extract(compare2.bit(7)));
+
+		// a is loaded, compare a
+		Word compare3 = a.not().add(highBit).add(a);
+		// equal
+		assertEquals(0, factory.extract(compare3));
+	}
 }

@@ -28,7 +28,7 @@ public class CPU {
 
 		ONE = factory.encodeBit(1);
 		ZERO = factory.encodeBit(0);
-		CMP_CONSTANT = factory.encodeWord(0b1000_0000, 8);
+		CMP_CONSTANT = factory.encodeWord(0b0000_0001, 8);
 
 		ac = factory.encodeWord(0, 8);
 		pc = factory.encodeWord(0, 8);
@@ -55,7 +55,7 @@ public class CPU {
 					value |= (Integer.valueOf(bytes[j], 16) & 1) << j;
 				}
 
-				debug(i, String.format("%13s", Integer.toString(value, 2)));
+				debug(i, String.format("%13s", Integer.toString(value, 2)).replace(" ", "0"));
 				memory[i] = factory.encodeWord(value, 13);
 			}
 		} catch (IOException e) {
@@ -125,8 +125,8 @@ public class CPU {
 		// Decode
 		Bit cmd_store = cmd_op.eq(15); // Store ac to memory
 		Bit cmd_load = cmd_op.eq(14); // Load memory to ac
-		Bit cmd_rol = cmd_op.eq(13); // Rotate left through alu_carry
-		Bit cmd_ror = cmd_op.eq(12); // Rotate right through alu_carry
+		Bit cmd_rol = cmd_op.eq(12); // Rotate left through alu_carry
+		Bit cmd_ror = cmd_op.eq(13); // Rotate right through alu_carry
 		Bit cmd_add = cmd_op.eq(11); // Add ac to immediate or indirect
 		Bit cmd_clc = cmd_op.eq(10); // Clear carry
 		Bit cmd_sec = cmd_op.eq(9); // Set carry
@@ -150,8 +150,8 @@ public class CPU {
 		
 		debug("cmd_param:", cmd_param, "cmd_a:", cmd_a);
 		
-		// CMP
-		Word b_cmp = cmd_a.ifThen(cmd, load_arg).not().add(CMP_CONSTANT).add(ac);
+		// CMP (two's compliment, then add)
+		Word b_cmp = cmd_a.ifThen(cmd_param, load_arg).not().add(ONE).add(ac);
 
 		// ROR
 		Bit carry_ror = ac.bit(0);
@@ -166,8 +166,12 @@ public class CPU {
 		// ADD
 		WordAndBit add_1 = ac.addWithCarry(cmd_param, alu_carry);
 		WordAndBit add_2 = ac.addWithCarry(load_arg, alu_carry);
-		Word b_add = cmd_a.ifThen(add_1.getWord(), add_2.getWord());
-		Bit carry_add = cmd_a.ifThen(add_1.getBit(), add_2.getBit());
+		Word b_add = cmd_a.ifThen(add_2.getWord(), add_1.getWord());
+		Bit carry_add = cmd_a.ifThen(add_2.getBit(), add_1.getBit());
+		
+		debug("add1:", add_1.getWord(), add_1.getBit(), "add2:",
+				add_2.getWord(), add_2.getBit(), "b_add:", b_add, "carry_add",
+				carry_add);
 
 		Word load_val = memoryAccess(cmd_param, ac, cmd_store);
 
