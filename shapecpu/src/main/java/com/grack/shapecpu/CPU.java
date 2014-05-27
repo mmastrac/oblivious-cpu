@@ -1,15 +1,9 @@
 package com.grack.shapecpu;
 
-import java.io.IOException;
-
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
-
 public class CPU {
 	private static final int MEMORY_SIZE = 256;
 	private final Bit ZERO;
 	private final Bit ONE;
-	private final Word CMP_CONSTANT;
 
 	Word pc;
 	Word ac;
@@ -18,17 +12,14 @@ public class CPU {
 	Bit alu_minus;
 	Bit alu_zero;
 	Word[] memory;
-	
-	private NativeBitFactory factory;
+
 	private boolean debug;
 
 	public CPU(NativeBitFactory factory, int[] memoryContents, boolean debug) {
-		this.factory = factory;
 		this.debug = debug;
 
 		ONE = factory.encodeBit(1);
 		ZERO = factory.encodeBit(0);
-		CMP_CONSTANT = factory.encodeWord(0b0000_0001, 8);
 
 		ac = factory.encodeWord(0, 8);
 		pc = factory.encodeWord(0, 8);
@@ -46,11 +37,9 @@ public class CPU {
 	private Word memoryRead(Word addr, int size) {
 		// Unroll the first time through the loop
 		Word b1 = addr.eq(0).and(memory[0].bits(size - 1, 0));
-//		debug("b1", addr.eq(0), 0, memory[0], b1);
 
 		for (int row = 1; row < MEMORY_SIZE; row++) {
 			b1 = b1.or(addr.eq(row).and(memory[row].bits(size - 1, 0)));
-//			debug("b1", addr.eq(row), row, memory[row], b1);
 		}
 
 		debug("b1", b1, addr);
@@ -69,13 +58,13 @@ public class CPU {
 		r[0] = addr.eq(0);
 		memory[0] = (r[0].and(write)).ifThen(reg, memory[0]);
 		Word b1 = r[0].and(memory[0].bits(7, 0));
-//		debug("b1", r[0], memory[0], 0, b1);
+		// debug("b1", r[0], memory[0], 0, b1);
 
 		for (int row = 1; row < MEMORY_SIZE; row++) {
 			r[row] = addr.eq(row);
 			memory[row] = (r[row].and(write)).ifThen(reg, memory[row]);
 			b1 = b1.or(r[row].and(memory[row].bits(7, 0)));
-//			debug("b1", r[row], memory[row].bits(7, 0), row, b1);
+			// debug("b1", r[row], memory[row].bits(7, 0), row, b1);
 		}
 
 		debug("b1", b1, addr, reg, write);
@@ -119,20 +108,21 @@ public class CPU {
 									// indirect
 
 		debug("Command select: ", "store:", cmd_store, "load:", cmd_load,
-				"rol:", cmd_rol, "ror:", cmd_ror, "add:", cmd_add, "clc:", cmd_clc, "sec:", cmd_sec,
-				"xor:", cmd_xor, "and:", cmd_and, "or:", cmd_or, "beq:", cmd_beq, "jmp:", cmd_jmp, "la:", cmd_la, "bmi:", cmd_bmi,
-				"cmp:", cmd_cmp);
+				"rol:", cmd_rol, "ror:", cmd_ror, "add:", cmd_add, "clc:",
+				cmd_clc, "sec:", cmd_sec, "xor:", cmd_xor, "and:", cmd_and,
+				"or:", cmd_or, "beq:", cmd_beq, "jmp:", cmd_jmp, "la:", cmd_la,
+				"bmi:", cmd_bmi, "cmp:", cmd_cmp);
 
 		// Address?
 		Bit cmd_a = cmd.bit(12);
-		
+
 		debug("cmd_param:", cmd_param, "cmd_a:", cmd_a);
-		
+
 		// CMP (two's compliment, then add)
 		Word b_cmp = cmd_a.ifThen(load_arg, cmd_param).not().add(ONE).add(ac);
 
 		debug("cmp:", b_cmp);
-		
+
 		// ROR
 		Bit carry_ror = ac.bit(0);
 		Word b_ror = ac.bits(7, 1);
@@ -148,7 +138,7 @@ public class CPU {
 		WordAndBit add_2 = ac.addWithCarry(load_arg, alu_carry);
 		Word b_add = cmd_a.ifThen(add_2.getWord(), add_1.getWord());
 		Bit carry_add = cmd_a.ifThen(add_2.getBit(), add_1.getBit());
-		
+
 		debug("add1:", add_1.getWord(), add_1.getBit(), "add2:",
 				add_2.getWord(), add_2.getBit(), "b_add:", b_add, "carry_add",
 				carry_add);
@@ -168,7 +158,7 @@ public class CPU {
 		ac_new = ac_new.or(cmd_or.and(ac.or(cmd_param)));
 		ac_new = ac_new.or(cmd_la.and(load_val));
 		ac_new = ac_new.or(ac_unchanged.and(ac));
-		
+
 		ac = ac_new;
 		debug("ac =", ac);
 
@@ -187,7 +177,7 @@ public class CPU {
 										cmd_sec.ifThen(ONE, alu_carry)))));
 
 		debug("carry:", alu_carry, "minus:", alu_minus, "zero:", alu_zero);
-		
+
 		Word pc_linear = pc.add(ONE);
 
 		pc = cmd_beq.ifThen(
@@ -199,7 +189,7 @@ public class CPU {
 	private void debug(Object... things) {
 		if (!debug)
 			return;
-		
+
 		for (Object thing : things) {
 			System.out.print(thing + " ");
 		}
