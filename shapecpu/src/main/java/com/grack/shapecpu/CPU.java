@@ -39,7 +39,7 @@ public class CPU {
 		Word b1 = addr.eq(0).and(memory[0].bits(size - 1, 0));
 
 		for (int row = 1; row < MEMORY_SIZE; row++) {
-			b1 = b1.or(addr.eq(row).and(memory[row].bits(size - 1, 0)));
+			b1 = b1.xor(addr.eq(row).and(memory[row].bits(size - 1, 0)));
 		}
 
 		debug("b1", b1, addr);
@@ -58,13 +58,11 @@ public class CPU {
 		r[0] = addr.eq(0);
 		memory[0] = (r[0].and(write)).ifThen(reg, memory[0]);
 		Word b1 = r[0].and(memory[0].bits(7, 0));
-		// debug("b1", r[0], memory[0], 0, b1);
 
 		for (int row = 1; row < MEMORY_SIZE; row++) {
 			r[row] = addr.eq(row);
 			memory[row] = (r[row].and(write)).ifThen(reg, memory[row]);
-			b1 = b1.or(r[row].and(memory[row].bits(7, 0)));
-			// debug("b1", r[row], memory[row].bits(7, 0), row, b1);
+			b1 = b1.xor(r[row].and(memory[row].bits(7, 0)));
 		}
 
 		debug("b1", b1, addr, reg, write);
@@ -145,19 +143,19 @@ public class CPU {
 
 		Word load_val = memoryAccess(cmd_param, ac, cmd_store);
 
-		Bit ac_unchanged = cmd_sec.or(cmd_clc).or(cmd_beq).or(cmd_bmi)
-				.or(cmd_cmp).or(cmd_jmp).or(cmd_store);
+		Bit ac_unchanged = cmd_sec.xor(cmd_clc).xor(cmd_beq).xor(cmd_bmi)
+				.xor(cmd_cmp).xor(cmd_jmp).xor(cmd_store);
 
 		Word ac_new;
 		ac_new = cmd_load.and(cmd_param);
-		ac_new = ac_new.or(cmd_ror.and(b_ror));
-		ac_new = ac_new.or(cmd_rol.and(b_rol));
-		ac_new = ac_new.or(cmd_add.and(b_add));
-		ac_new = ac_new.or(cmd_and.and(ac.and(cmd_param)));
-		ac_new = ac_new.or(cmd_xor.and(ac.xor(cmd_param)));
-		ac_new = ac_new.or(cmd_or.and(ac.or(cmd_param)));
-		ac_new = ac_new.or(cmd_la.and(load_val));
-		ac_new = ac_new.or(ac_unchanged.and(ac));
+		ac_new = ac_new.xor(cmd_ror.and(b_ror));
+		ac_new = ac_new.xor(cmd_rol.and(b_rol));
+		ac_new = ac_new.xor(cmd_add.and(b_add));
+		ac_new = ac_new.xor(cmd_and.and(ac.and(cmd_param)));
+		ac_new = ac_new.xor(cmd_xor.and(ac.xor(cmd_param)));
+		ac_new = ac_new.xor(cmd_or.and(ac.or(cmd_param)));
+		ac_new = ac_new.xor(cmd_la.and(load_val));
+		ac_new = ac_new.xor(ac_unchanged.and(ac));
 
 		ac = ac_new;
 		debug("ac =", ac);

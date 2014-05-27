@@ -36,7 +36,7 @@ public class Bit {
 	public Word ifThen(Word a, Word b) {
 		Preconditions.checkNotNull(a);
 		Preconditions.checkNotNull(b);
-		return this.and(a).or(this.not().and(b));
+		return this.and(a).xor(this.not().and(b));
 	}
 
 	public Bit not() {
