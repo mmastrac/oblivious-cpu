@@ -1,4 +1,10 @@
-homomorphic-encryption-processor
-================================
+oblivious-cpu
+=============
 
-A re-implementation of ShapeCPU
+A re-implementation of ShapeCPU via reverse-engineering and optimization.
+
+To run:
+
+mvn test
+
+
