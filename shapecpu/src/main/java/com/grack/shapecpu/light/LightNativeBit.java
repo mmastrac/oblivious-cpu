@@ -17,12 +17,14 @@ public class LightNativeBit implements NativeBit {
 
 	@Override
 	public NativeBit xor(NativeBit n) {
+		factory.xor++;
 		LightNativeBit other = (LightNativeBit)n;
 		return new LightNativeBit(factory, scramble(value ^ other.value));
 	}
 
 	@Override
 	public NativeBit and(NativeBit n) {
+		factory.and++;
 		LightNativeBit other = (LightNativeBit)n;
 		return new LightNativeBit(factory, scramble(value & other.value));
 	}

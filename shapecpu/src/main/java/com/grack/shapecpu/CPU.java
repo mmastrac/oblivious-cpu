@@ -22,7 +22,7 @@ public class CPU {
 	private NativeBitFactory factory;
 	private boolean debug;
 
-	public CPU(NativeBitFactory factory, boolean debug) {
+	public CPU(NativeBitFactory factory, int[] memoryContents, boolean debug) {
 		this.factory = factory;
 		this.debug = debug;
 
@@ -38,31 +38,9 @@ public class CPU {
 
 		memory = new Word[MEMORY_SIZE];
 		for (int i = 0; i < MEMORY_SIZE; i++) {
-			memory[i] = factory.encodeWord(0, 13);
+			memory[i] = factory.encodeWord(
+					i < memoryContents.length ? memoryContents[i] : 0, 13);
 		}
-
-		try {
-			String mem = Resources.toString(getClass()
-					.getResource("memory.txt"), Charsets.UTF_8);
-			String[] memoryContents = mem.trim().split("\n");
-			debug("memory size:", memoryContents.length);
-			
-			for (int i = 0; i < memoryContents.length; i++) {
-				String line = memoryContents[i];
-				String[] bytes = line.split(" ");
-				int value = 0;
-				for (int j = 0; j < 13; j++) {
-					value |= (Integer.valueOf(bytes[j], 16) & 1) << j;
-				}
-
-				debug(i, String.format("%13s", Integer.toString(value, 2)).replace(" ", "0"));
-				memory[i] = factory.encodeWord(value, 13);
-			}
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-		
-//		System.exit(0);
 	}
 
 	private Word memoryRead(Word addr, int size) {
@@ -151,8 +129,10 @@ public class CPU {
 		debug("cmd_param:", cmd_param, "cmd_a:", cmd_a);
 		
 		// CMP (two's compliment, then add)
-		Word b_cmp = cmd_a.ifThen(cmd_param, load_arg).not().add(ONE).add(ac);
+		Word b_cmp = cmd_a.ifThen(load_arg, cmd_param).not().add(ONE).add(ac);
 
+		debug("cmp:", b_cmp);
+		
 		// ROR
 		Bit carry_ror = ac.bit(0);
 		Word b_ror = ac.bits(7, 1);

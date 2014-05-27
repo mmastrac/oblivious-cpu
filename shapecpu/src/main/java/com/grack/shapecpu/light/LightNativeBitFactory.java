@@ -9,6 +9,7 @@ import com.grack.shapecpu.Word;
 
 public class LightNativeBitFactory implements NativeBitFactory {
 	private final Random r = new Random();
+	int xor, and;
 
 	@Override
 	public NativeBit encodeNativeBit(int bit) {
@@ -43,5 +44,13 @@ public class LightNativeBitFactory implements NativeBitFactory {
 
 	public int scramble(int value) {
 		return (value + (r.nextInt(256) & ~1)) % 256 | 0xf000;
+	}
+	
+	public int getAndCount() {
+		return and;
+	}
+	
+	public int getXorCount() {
+		return xor;
 	}
 }
