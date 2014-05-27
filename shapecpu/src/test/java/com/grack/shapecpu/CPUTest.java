@@ -50,20 +50,20 @@ public class CPUTest {
 	
 	@Test
 	public void cpuTurnsOn() {
-		CPU cpu = new CPU(new LightNativeBitFactory(), memory, true);
+		CPU cpu = new CPU(new LightNativeBitFactory(), memory, false);
 		cpu.tick();
 	}
 
 	@Test
 	public void cpuTicksTwice() {
-		CPU cpu = new CPU(new LightNativeBitFactory(), memory, true);
+		CPU cpu = new CPU(new LightNativeBitFactory(), memory, false);
 		cpu.tick();
 		cpu.tick();
 	}
 
 	@Test
 	public void cpuTicksThrice() {
-		CPU cpu = new CPU(new LightNativeBitFactory(), memory, true);
+		CPU cpu = new CPU(new LightNativeBitFactory(), memory, false);
 		cpu.tick();
 		cpu.tick();
 		cpu.tick();
@@ -84,7 +84,7 @@ public class CPUTest {
 	@Test
 	public void cpuTicksUntilDone() {
 		LightNativeBitFactory factory = new LightNativeBitFactory();
-		CPU cpu = new CPU(factory, memory, true);
+		CPU cpu = new CPU(factory, memory, false);
 		long lastPC = -1;
 		for (int i = 0; i < 20000; i++) {
 			long pc = factory.extract(cpu.pc);
