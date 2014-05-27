@@ -1,0 +1,13 @@
+Brainstorming:
+
+Rather than re-processing the network in tick(), we should be building a network of operations that include the 
+entire system state. This will result in a directed data-flow graph that we may be able to optimize statically 
+(ie: coalesce or prune some operations).
+
+Once we have a directed data-flow graph, we could generate a very simple elementary bytecode that could be 
+processed by a Java or C implementation of a fully-homomorphic system. This bytecode would consist of simple 
+operations such as:
+
+  temp_1 = xor location_1, location_2
+  temp_2 = and temp_1, location_3
+
