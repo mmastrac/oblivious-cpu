@@ -31,7 +31,8 @@ public class CPUTest {
 				value |= (Integer.valueOf(bytes[j], 16) & 1) << j;
 			}
 
-			// debug(i, String.format("%13s", Integer.toString(value, 2))
+			// System.out.println(i + " " + String.format("%13s",
+			// Integer.toString(value, 2))
 			// .replace(" ", "0"));
 			memory[i] = value;
 		}
