@@ -1,4 +1,4 @@
-package com.grack.shapecpu.light;
+package com.grack.homomorphic.light;
 
 import static org.junit.Assert.*;
 

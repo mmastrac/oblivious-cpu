@@ -34,7 +34,7 @@ public class Main {
 
 			switch (cmd[0]) {
 			case "pretty":
-				pretty(cmd[1], line.hasOption("process-labels"), out);
+				pretty(cmd[1], line.hasOption("processlabels"), out);
 				break;
 			case "assemble":
 				assemble(cmd[1], out);

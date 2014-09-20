@@ -1,4 +1,4 @@
-package com.grack.shapecpu;
+package com.grack.homomorphic;
 
 import static org.junit.Assert.assertEquals;
 

@@ -17,7 +17,6 @@ import com.grack.homomorphic.light.LightBitFactory;
 import com.grack.homomorphic.light.StandardStateFactory;
 import com.grack.homomorphic.logging.LoggingBitFactory;
 import com.grack.homomorphic.logging.LoggingStateFactory;
-import com.grack.homomorphic.ops.Bit;
 import com.grack.homomorphic.ops.State;
 import com.grack.homomorphic.ops.StateFactory;
 
@@ -77,8 +76,8 @@ public class CPUTest {
 		State state = stateFactory.createState();
 		cpu.tick(state);
 
-		Bit bit = state.getBitRegister("alu_carry");
-//		System.out.println(((LoggingBit) bit.nativeBit()).describe());
+		// Bit bit = state.getBitRegister("alu_carry");
+		// System.out.println(((LoggingBit) bit.nativeBit()).describe());
 
 		try (Writer w = new OutputStreamWriter(new FileOutputStream(
 				"/tmp/output.txt"))) {
