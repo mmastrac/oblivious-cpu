@@ -1,8 +1,5 @@
 package com.grack.homomorphic.logging;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.grack.homomorphic.ops.NativeBit;
 
 public class LoggingBit implements NativeBit {
@@ -10,7 +7,6 @@ public class LoggingBit implements NativeBit {
 	private LoggingBitNodeType type;
 	private int[] children;
 	private int nodeIndex;
-	private ArrayList<Integer> backRefs = new ArrayList<>();
 	private String name;
 
 	public LoggingBit(LoggingBitFactory bitFactory, String name,
@@ -97,14 +93,6 @@ public class LoggingBit implements NativeBit {
 		if (this.name != null)
 			throw new IllegalStateException("This node already has a name");
 		this.name = name;
-	}
-	
-	public void addBackRef(int index) {
-		backRefs.add(index);
-	}
-
-	public List<Integer> backRefs() {
-		return backRefs;
 	}
 
 	public LoggingBitNodeType type() {

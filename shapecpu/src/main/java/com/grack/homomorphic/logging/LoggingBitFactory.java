@@ -1,7 +1,6 @@
 package com.grack.homomorphic.logging;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import com.grack.homomorphic.ops.Bit;
 import com.grack.homomorphic.ops.NativeBit;
@@ -76,28 +75,10 @@ public class LoggingBitFactory implements NativeBitFactory {
 	int register(LoggingBit loggingBit) {
 		int idx = bits.size();
 		bits.add(loggingBit);
-		for (int i : loggingBit.children()) {
-			get(i).addBackRef(idx);
-		}
 		return idx;
 	}
 
 	public NativeBit create(String name, LoggingBitNodeType type, int[] children) {
-		// See if there is a bit with this definition already
-		if (children.length > 0) {
-			Arrays.sort(children);
-			
-			// Note: only need to check the first child as both children will
-			// have any valid backrefs we can re-use
-			LoggingBit bitRef = get(children[0]);
-			for (int backRef : bitRef.backRefs()) {
-				LoggingBit bit = get(backRef);
-				if (bit.type() == type && Arrays.equals(children, bit.children())) {
-					return bit;
-				}
-			}
-		}
-		
 		return new LoggingBit(this, name, type, children);
 	}
 
