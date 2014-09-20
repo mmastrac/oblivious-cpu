@@ -1,12 +1,12 @@
-package com.grack.shapecpu.logging;
+package com.grack.homomorphic.logging;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import com.grack.shapecpu.Bit;
-import com.grack.shapecpu.NativeBit;
-import com.grack.shapecpu.NativeBitFactory;
-import com.grack.shapecpu.Word;
+import com.grack.homomorphic.ops.Bit;
+import com.grack.homomorphic.ops.NativeBit;
+import com.grack.homomorphic.ops.NativeBitFactory;
+import com.grack.homomorphic.ops.Word;
 
 public class LoggingBitFactory implements NativeBitFactory {
 	private int index;
@@ -32,7 +32,7 @@ public class LoggingBitFactory implements NativeBitFactory {
 	public NativeBit encodeNamedOutputBit(String name, NativeBit value) {
 		return create(name, LoggingBitNodeType.OUTPUT, new int[] { ((LoggingBit) value).index() });
 	}
-	
+		
 	public Bit createNamedInputBit(String name) {
 		return new Bit(encodeNamedInputBit(name));
 	}

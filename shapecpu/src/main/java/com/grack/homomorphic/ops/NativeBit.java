@@ -1,4 +1,4 @@
-package com.grack.shapecpu;
+package com.grack.homomorphic.ops;
 
 /**
  * The native homomorphic system.

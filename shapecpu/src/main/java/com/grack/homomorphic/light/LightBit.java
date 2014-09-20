@@ -1,15 +1,15 @@
-package com.grack.shapecpu.light;
+package com.grack.homomorphic.light;
 
-import com.grack.shapecpu.NativeBit;
+import com.grack.homomorphic.ops.NativeBit;
 
 /**
  * Uses the bit 0 for the actual value of the native bit 
  */
-public class LightNativeBit implements NativeBit {
+public class LightBit implements NativeBit {
 	private int value;
-	private LightNativeBitFactory factory;
+	private LightBitFactory factory;
 	
-	public LightNativeBit(LightNativeBitFactory factory, int value) {
+	public LightBit(LightBitFactory factory, int value) {
 		this.factory = factory;
 		this.value = value;
 	}
@@ -17,20 +17,20 @@ public class LightNativeBit implements NativeBit {
 	@Override
 	public NativeBit xor(NativeBit n) {
 		factory.xor++;
-		LightNativeBit other = (LightNativeBit)n;
-		return new LightNativeBit(factory, scramble(value ^ other.value));
+		LightBit other = (LightBit)n;
+		return new LightBit(factory, scramble(value ^ other.value));
 	}
 
 	@Override
 	public NativeBit not() {
-		return xor(new LightNativeBit(factory, 1));
+		return xor(new LightBit(factory, 1));
 	}
 	
 	@Override
 	public NativeBit and(NativeBit n) {
 		factory.and++;
-		LightNativeBit other = (LightNativeBit)n;
-		return new LightNativeBit(factory, scramble(value & other.value));
+		LightBit other = (LightBit)n;
+		return new LightBit(factory, scramble(value & other.value));
 	}
 	
 	private int scramble(int value) {

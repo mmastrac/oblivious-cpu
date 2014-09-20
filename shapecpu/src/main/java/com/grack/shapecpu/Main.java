@@ -21,7 +21,6 @@ import com.grack.shapecpu.assembler.Program;
 public class Main {
 	public static void main(String[] args) throws ParseException {
 		Options options = new Options();
-		options.addOption("bar", false, "bar");
 		options.addOption("processlabels", false, "Process label references");
 		options.addOption("o", true,
 				"Output file (if not specified, the output is written to the console)");

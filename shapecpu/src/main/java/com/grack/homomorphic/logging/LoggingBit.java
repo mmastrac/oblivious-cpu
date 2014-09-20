@@ -1,9 +1,9 @@
-package com.grack.shapecpu.logging;
+package com.grack.homomorphic.logging;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import com.grack.shapecpu.NativeBit;
+import com.grack.homomorphic.ops.NativeBit;
 
 public class LoggingBit implements NativeBit {
 	private LoggingBitFactory bitFactory;

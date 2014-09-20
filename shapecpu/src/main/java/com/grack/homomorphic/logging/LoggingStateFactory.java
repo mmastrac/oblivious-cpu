@@ -1,12 +1,12 @@
-package com.grack.shapecpu.logging;
+package com.grack.homomorphic.logging;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import com.grack.shapecpu.Bit;
-import com.grack.shapecpu.State;
-import com.grack.shapecpu.StateFactory;
-import com.grack.shapecpu.Word;
+import com.grack.homomorphic.ops.Bit;
+import com.grack.homomorphic.ops.State;
+import com.grack.homomorphic.ops.StateFactory;
+import com.grack.homomorphic.ops.Word;
 
 public class LoggingStateFactory implements StateFactory {
 	private LoggingBitFactory bitFactory;

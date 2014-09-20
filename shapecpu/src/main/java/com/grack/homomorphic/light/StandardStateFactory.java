@@ -1,13 +1,13 @@
-package com.grack.shapecpu.light;
+package com.grack.homomorphic.light;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import com.grack.shapecpu.Bit;
-import com.grack.shapecpu.NativeBitFactory;
-import com.grack.shapecpu.State;
-import com.grack.shapecpu.StateFactory;
-import com.grack.shapecpu.Word;
+import com.grack.homomorphic.ops.Bit;
+import com.grack.homomorphic.ops.NativeBitFactory;
+import com.grack.homomorphic.ops.State;
+import com.grack.homomorphic.ops.StateFactory;
+import com.grack.homomorphic.ops.Word;
 
 public class StandardStateFactory implements StateFactory {
 	private static final Map<String, Bit> bits = new HashMap<>();

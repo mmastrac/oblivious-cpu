@@ -1,18 +1,18 @@
-package com.grack.shapecpu.light;
+package com.grack.homomorphic.light;
 
 import java.util.Random;
 
-import com.grack.shapecpu.Bit;
-import com.grack.shapecpu.NativeBit;
-import com.grack.shapecpu.NativeBitFactory;
-import com.grack.shapecpu.Word;
+import com.grack.homomorphic.ops.Bit;
+import com.grack.homomorphic.ops.NativeBit;
+import com.grack.homomorphic.ops.NativeBitFactory;
+import com.grack.homomorphic.ops.Word;
 
 /**
  * Implementation of homomorphic CPU, where the bits are encoded as the smallest
  * bit in a byte. No privacy is implemented, but this ensure that there is at
  * least some scrambling of the contents.
  */
-public class LightNativeBitFactory implements NativeBitFactory {
+public class LightBitFactory implements NativeBitFactory {
 	private final Random r = new Random();
 	int xor, and;
 
@@ -25,15 +25,15 @@ public class LightNativeBitFactory implements NativeBitFactory {
 		int v = 0;
 		if (bit == 1)
 			v = v | 1;
-		return new LightNativeBit(this, scramble(v));
+		return new LightBit(this, scramble(v));
 	}
 
 	public int extract(Bit bit) {
-		LightNativeBit nativeBit = (LightNativeBit) bit.nativeBit();
+		LightBit nativeBit = (LightBit) bit.nativeBit();
 		return extract(nativeBit);
 	}
 
-	public int extract(LightNativeBit nativeBit) {
+	public int extract(LightBit nativeBit) {
 		return nativeBit.value() & 1;
 	}
 

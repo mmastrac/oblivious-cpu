@@ -13,10 +13,13 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
-import com.grack.shapecpu.light.LightNativeBitFactory;
-import com.grack.shapecpu.light.StandardStateFactory;
-import com.grack.shapecpu.logging.LoggingBitFactory;
-import com.grack.shapecpu.logging.LoggingStateFactory;
+import com.grack.homomorphic.light.LightBitFactory;
+import com.grack.homomorphic.light.StandardStateFactory;
+import com.grack.homomorphic.logging.LoggingBitFactory;
+import com.grack.homomorphic.logging.LoggingStateFactory;
+import com.grack.homomorphic.ops.Bit;
+import com.grack.homomorphic.ops.State;
+import com.grack.homomorphic.ops.StateFactory;
 
 public class CPUTest {
 	private int[] memory;
@@ -59,7 +62,7 @@ public class CPUTest {
 
 	@Test
 	public void cpuTurnsOn() {
-		LightNativeBitFactory factory = new LightNativeBitFactory();
+		LightBitFactory factory = new LightBitFactory();
 		StateFactory stateFactory = new StandardStateFactory(factory);
 		CPU cpu = new CPU(factory, stateFactory, memory, false);
 		State state = stateFactory.createState();
@@ -94,7 +97,7 @@ public class CPUTest {
 
 	@Test
 	public void cpuTicksTwice() {
-		LightNativeBitFactory factory = new LightNativeBitFactory();
+		LightBitFactory factory = new LightBitFactory();
 		StateFactory stateFactory = new StandardStateFactory(factory);
 		CPU cpu = new CPU(factory, stateFactory, memory, false);
 		State state = stateFactory.createState();
@@ -104,7 +107,7 @@ public class CPUTest {
 
 	@Test
 	public void cpuTicksThrice() {
-		LightNativeBitFactory factory = new LightNativeBitFactory();
+		LightBitFactory factory = new LightBitFactory();
 		StateFactory stateFactory = new StandardStateFactory(factory);
 		CPU cpu = new CPU(factory, stateFactory, memory, false);
 		State state = stateFactory.createState();
@@ -115,7 +118,7 @@ public class CPUTest {
 
 	@Test
 	public void cpuTicks300() {
-		LightNativeBitFactory factory = new LightNativeBitFactory();
+		LightBitFactory factory = new LightBitFactory();
 		StateFactory stateFactory = new StandardStateFactory(factory);
 		CPU cpu = new CPU(factory, stateFactory, memory, false);
 		State state = stateFactory.createState();
@@ -129,7 +132,7 @@ public class CPUTest {
 
 	@Test
 	public void cpuTicksUntilDone() {
-		LightNativeBitFactory factory = new LightNativeBitFactory();
+		LightBitFactory factory = new LightBitFactory();
 		StateFactory stateFactory = new StandardStateFactory(factory);
 		CPU cpu = new CPU(factory, stateFactory, memory, false);
 		State state = stateFactory.createState();

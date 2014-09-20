@@ -1,4 +1,4 @@
-package com.grack.shapecpu;
+package com.grack.homomorphic.ops;
 
 /**
  * Creates the inter-tick {@link State} environment.

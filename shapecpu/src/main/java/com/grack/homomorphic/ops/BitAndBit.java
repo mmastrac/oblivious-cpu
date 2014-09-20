@@ -1,4 +1,4 @@
-package com.grack.shapecpu;
+package com.grack.homomorphic.ops;
 
 /**
  * Helper tuple for addition w/carry.

@@ -5,16 +5,19 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.grack.shapecpu.light.LightNativeBitFactory;
+import com.grack.homomorphic.light.LightBitFactory;
+import com.grack.homomorphic.ops.Bit;
+import com.grack.homomorphic.ops.Word;
+import com.grack.homomorphic.ops.WordAndBit;
 
 public class WordTest {
-	private LightNativeBitFactory factory;
+	private LightBitFactory factory;
 	private Bit one;
 	private Bit zero;
 
 	@Before
 	public void setup() {
-		factory = new LightNativeBitFactory();
+		factory = new LightBitFactory();
 		one = factory.encodeBit(1);
 		zero = factory.encodeBit(0);
 	}

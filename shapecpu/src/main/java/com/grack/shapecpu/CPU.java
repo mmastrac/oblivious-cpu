@@ -1,5 +1,12 @@
 package com.grack.shapecpu;
 
+import com.grack.homomorphic.ops.Bit;
+import com.grack.homomorphic.ops.NativeBitFactory;
+import com.grack.homomorphic.ops.State;
+import com.grack.homomorphic.ops.StateFactory;
+import com.grack.homomorphic.ops.Word;
+import com.grack.homomorphic.ops.WordAndBit;
+
 public class CPU {
 	private static final String ALU_CARRY = "alu_carry";
 	private static final String ALU_MINUS = "alu_minus";
