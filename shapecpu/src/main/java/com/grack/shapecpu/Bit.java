@@ -40,7 +40,7 @@ public class Bit {
 	}
 
 	public Bit not() {
-		return this.xor(nativeBit.factory().encodeBit(1));
+		return new Bit(nativeBit.not());
 	}
 
 	public Bit or(Bit b) {

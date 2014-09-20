@@ -15,7 +15,7 @@ public interface NativeBit {
 	NativeBit and(NativeBit n);
 
 	/**
-	 * Gets the {@link NativeBitFactory} this was created with.
+	 * Inverts a bit.
 	 */
-	NativeBitFactory factory();
+	NativeBit not();
 }

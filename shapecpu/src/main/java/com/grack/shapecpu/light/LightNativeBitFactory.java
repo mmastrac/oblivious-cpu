@@ -7,6 +7,11 @@ import com.grack.shapecpu.NativeBit;
 import com.grack.shapecpu.NativeBitFactory;
 import com.grack.shapecpu.Word;
 
+/**
+ * Implementation of homomorphic CPU, where the bits are encoded as the smallest
+ * bit in a byte. No privacy is implemented, but this ensure that there is at
+ * least some scrambling of the contents.
+ */
 public class LightNativeBitFactory implements NativeBitFactory {
 	private final Random r = new Random();
 	int xor, and;
@@ -45,11 +50,11 @@ public class LightNativeBitFactory implements NativeBitFactory {
 	public int scramble(int value) {
 		return (value + (r.nextInt(256) & ~1)) % 256 | 0xf000;
 	}
-	
+
 	public int getAndCount() {
 		return and;
 	}
-	
+
 	public int getXorCount() {
 		return xor;
 	}
