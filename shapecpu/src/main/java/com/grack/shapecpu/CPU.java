@@ -1,44 +1,41 @@
 package com.grack.shapecpu;
 
 public class CPU {
-	private static final int MEMORY_SIZE = 256;
+	private static final String ALU_CARRY = "alu_carry";
+	private static final String ALU_MINUS = "alu_minus";
+	private static final String ALU_ZERO = "alu_zero";
+	private static final String PC = "pc";
+	private static final String AC = "ac";
+	private static final String MEMORY = "memory";
+	
 	private final Bit ZERO;
 	private final Bit ONE;
-
-	Word pc;
-	Word ac;
-
-	Bit alu_carry;
-	Bit alu_minus;
-	Bit alu_zero;
-	Word[] memory;
+	private final int memorySize;
 
 	private boolean debug;
 
-	public CPU(NativeBitFactory factory, int[] memoryContents, boolean debug) {
+	public CPU(NativeBitFactory factory, NativeStateFactory stateFactory, int[] memoryContents, boolean debug) {
 		this.debug = debug;
 
 		ONE = factory.encodeBit(1);
 		ZERO = factory.encodeBit(0);
 
-		ac = factory.encodeWord(0, 8);
-		pc = factory.encodeWord(0, 8);
-		alu_carry = ZERO;
-		alu_minus = ZERO;
-		alu_zero = ZERO;
-
-		memory = new Word[MEMORY_SIZE];
-		for (int i = 0; i < MEMORY_SIZE; i++) {
-			memory[i] = factory.encodeWord(
-					i < memoryContents.length ? memoryContents[i] : 0, 13);
-		}
+		stateFactory.allocateBitRegister(ALU_CARRY);
+		stateFactory.allocateBitRegister(ALU_MINUS);
+		stateFactory.allocateBitRegister(ALU_ZERO);
+		
+		stateFactory.allocateWordRegister(AC);
+		stateFactory.allocateWordRegister(PC);
+		
+		stateFactory.allocateWordArrayRegister(MEMORY, memoryContents);
+		memorySize = memoryContents.length;
 	}
 
-	private Word memoryRead(Word addr, int size) {
+	private Word memoryRead(Word[] memory, Word addr, int size) {
 		// Unroll the first time through the loop
 		Word b1 = addr.eq(0).and(memory[0].bits(size - 1, 0));
 
-		for (int row = 1; row < MEMORY_SIZE; row++) {
+		for (int row = 1; row < memorySize; row++) {
 			b1 = b1.xor(addr.eq(row).and(memory[row].bits(size - 1, 0)));
 		}
 
@@ -51,15 +48,15 @@ public class CPU {
 	 * Reads or writes a memory address to/from a register, depending on the
 	 * state of the write flag.
 	 */
-	private Word memoryAccess(Word addr, Word reg, Bit write) {
-		Bit[] r = new Bit[MEMORY_SIZE];
+	private Word memoryAccess(Word[] memory, Word addr, Word reg, Bit write) {
+		Bit[] r = new Bit[memorySize];
 
 		// Unroll the first time through the loop
 		r[0] = addr.eq(0);
 		memory[0] = (r[0].and(write)).ifThen(reg, memory[0]);
 		Word b1 = r[0].and(memory[0].bits(7, 0));
 
-		for (int row = 1; row < MEMORY_SIZE; row++) {
+		for (int row = 1; row < memorySize; row++) {
 			r[row] = addr.eq(row);
 			memory[row] = (r[row].and(write)).ifThen(reg, memory[row]);
 			b1 = b1.xor(r[row].and(memory[row].bits(7, 0)));
@@ -69,16 +66,23 @@ public class CPU {
 		return b1;
 	}
 
-	public void tick() {
+	public void tick(State state) {
+		Word pc = state.getWordRegister(PC);
+		Word ac = state.getWordRegister(AC);
+		Bit alu_carry = state.getBitRegister(ALU_CARRY);
+		Bit alu_minus = state.getBitRegister(ALU_MINUS);
+		Bit alu_zero = state.getBitRegister(ALU_ZERO);
+		Word[] memory = state.getWordArrayRegister(MEMORY);
+		
 		debug("***** tick *****");
 
 		debug("pc =", pc);
 		debug("ac =", ac);
 
-		Word cmd = memoryRead(pc, 13);
+		Word cmd = memoryRead(memory, pc, 13);
 		Word cmd_param = cmd.bits(7, 0);
 
-		Word load_arg = memoryRead(cmd_param, 8);
+		Word load_arg = memoryRead(memory, cmd_param, 8);
 
 		debug("cmd =", cmd);
 		debug("load_arg =", load_arg);
@@ -141,7 +145,7 @@ public class CPU {
 				add_2.getWord(), add_2.getBit(), "b_add:", b_add, "carry_add",
 				carry_add);
 
-		Word load_val = memoryAccess(cmd_param, ac, cmd_store);
+		Word load_val = memoryAccess(memory, cmd_param, ac, cmd_store);
 
 		Bit ac_unchanged = cmd_sec.xor(cmd_clc).xor(cmd_beq).xor(cmd_bmi)
 				.xor(cmd_cmp).xor(cmd_jmp).xor(cmd_store);
@@ -182,6 +186,14 @@ public class CPU {
 				alu_zero.ifThen(cmd_param, pc_linear),
 				cmd_bmi.ifThen(alu_minus.ifThen(cmd_param, pc_linear),
 						cmd_jmp.ifThen(cmd_param, pc_linear)));
+		
+		// Update CPU state
+		state.setBitRegister(ALU_CARRY, alu_carry);
+		state.setBitRegister(ALU_MINUS, alu_minus);
+		state.setBitRegister(ALU_ZERO, alu_zero);
+		state.setWordRegister(AC, ac);
+		state.setWordRegister(PC, pc);
+		state.setWordArrayRegister(MEMORY, memory);
 	}
 
 	private void debug(Object... things) {

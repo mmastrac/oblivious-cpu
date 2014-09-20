@@ -21,7 +21,7 @@ public class CPUTest {
 				Charsets.UTF_8);
 		String[] memoryContents = mem.trim().split("\n");
 		// debug("memory size:", memoryContents.length);
-		memory = new int[memoryContents.length];
+		memory = new int[256];
 
 		for (int i = 0; i < memoryContents.length; i++) {
 			String line = memoryContents[i];
@@ -51,31 +51,42 @@ public class CPUTest {
 	
 	@Test
 	public void cpuTurnsOn() {
-		CPU cpu = new CPU(new LightNativeBitFactory(), memory, false);
-		cpu.tick();
+		LightNativeBitFactory factory = new LightNativeBitFactory();
+		NativeStateFactory stateFactory = new NativeStateFactory(factory);
+		CPU cpu = new CPU(factory, stateFactory, memory, false);
+		State state = stateFactory.createState();
+		cpu.tick(state);
 	}
 
 	@Test
 	public void cpuTicksTwice() {
-		CPU cpu = new CPU(new LightNativeBitFactory(), memory, false);
-		cpu.tick();
-		cpu.tick();
+		LightNativeBitFactory factory = new LightNativeBitFactory();
+		NativeStateFactory stateFactory = new NativeStateFactory(factory);
+		CPU cpu = new CPU(factory, stateFactory, memory, false);
+		State state = stateFactory.createState();
+		cpu.tick(state);
+		cpu.tick(state);
 	}
 
 	@Test
 	public void cpuTicksThrice() {
-		CPU cpu = new CPU(new LightNativeBitFactory(), memory, false);
-		cpu.tick();
-		cpu.tick();
-		cpu.tick();
+		LightNativeBitFactory factory = new LightNativeBitFactory();
+		NativeStateFactory stateFactory = new NativeStateFactory(factory);
+		CPU cpu = new CPU(factory, stateFactory, memory, false);
+		State state = stateFactory.createState();
+		cpu.tick(state);
+		cpu.tick(state);
+		cpu.tick(state);
 	}
 
 	@Test
 	public void cpuTicks300() {
 		LightNativeBitFactory factory = new LightNativeBitFactory();
-		CPU cpu = new CPU(factory, memory, false);
+		NativeStateFactory stateFactory = new NativeStateFactory(factory);
+		CPU cpu = new CPU(factory, stateFactory, memory, false);
+		State state = stateFactory.createState();
 		for (int i = 0; i < 300; i++) {
-			cpu.tick();
+			cpu.tick(state);
 		}
 
 		System.out.println("XOR count = " + factory.getXorCount());
@@ -85,15 +96,18 @@ public class CPUTest {
 	@Test
 	public void cpuTicksUntilDone() {
 		LightNativeBitFactory factory = new LightNativeBitFactory();
-		CPU cpu = new CPU(factory, memory, false);
+		NativeStateFactory stateFactory = new NativeStateFactory(factory);
+		CPU cpu = new CPU(factory, stateFactory, memory, false);
+		State state = stateFactory.createState();
+		
 		long lastPC = -1;
 		for (int i = 0; i < 20000; i++) {
-			long pc = factory.extract(cpu.pc);
+			long pc = factory.extract(state.getWordRegister("pc"));
 			if (pc == lastPC) {
 				// Success
 				System.out.println("Total ticks: " + i);
 				for (int j = 0; j < output.length; j++) {
-					long mem = factory.extract(cpu.memory[j]) & 0xff;
+					long mem = factory.extract(state.getWordArrayRegister("memory")[j]) & 0xff;
 					if (mem != output[j])
 						fail();
 //					System.out.println(String.format("%3d: %s %5d", j,
@@ -105,7 +119,7 @@ public class CPUTest {
 			}
 			lastPC = pc;
 
-			cpu.tick();
+			cpu.tick(state);
 		}
 
 		fail();
