@@ -1,51 +1,22 @@
 package com.grack.shapecpu;
 
-import java.util.Map;
-
-public class State {
-	private Map<String, Bit> bits;
-	private Map<String, Word> words;
-	private Map<String, Word[]> wordArrays;
+/**
+ * Inter-tick state.
+ */
+public interface State {
+	public abstract Word getWordRegister(String name);
 	
-	public State(Map<String, Bit> bits, Map<String, Word> words, Map<String, Word[]> wordArrays) {
-		this.bits = bits;
-		this.words = words;
-		this.wordArrays = wordArrays;
-	}
+	public abstract Bit getBitRegister(String name);
 	
-	public Word getWordRegister(String name) {
-		if (!words.containsKey(name))
-			throw new IllegalArgumentException("Invalid key: " + name);
-		return words.get(name);
-	}
+	public abstract Word[] getWordArrayRegister(String name);
+	
+	public abstract void setBitRegister(String name, Bit value);
+	
+	public abstract void setWordRegister(String name, Word value);
+	
+	public abstract void setWordArrayRegister(String name, Word[] value);
 
-	public Bit getBitRegister(String name) {
-		if (!bits.containsKey(name))
-			throw new IllegalArgumentException("Invalid key: " + name);
-		return bits.get(name);
-	}
+	public abstract Bit one();
 
-	public Word[] getWordArrayRegister(String name) {
-		if (!wordArrays.containsKey(name))
-			throw new IllegalArgumentException("Invalid key: " + name);
-		return wordArrays.get(name);
-	}
-
-	public void setBitRegister(String name, Bit value) {
-		if (!bits.containsKey(name))
-			throw new IllegalArgumentException("Invalid key: " + name);
-		bits.put(name, value);
-	}
-
-	public void setWordRegister(String name, Word value) {
-		if (!words.containsKey(name))
-			throw new IllegalArgumentException("Invalid key: " + name);
-		words.put(name, value);
-	}
-
-	public void setWordArrayRegister(String name, Word[] value) {
-		if (!wordArrays.containsKey(name))
-			throw new IllegalArgumentException("Invalid key: " + name);
-		wordArrays.put(name, value);
-	}
+	public abstract Bit zero();
 }

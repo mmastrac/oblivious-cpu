@@ -7,35 +7,28 @@ public class CPU {
 	private static final String PC = "pc";
 	private static final String AC = "ac";
 	private static final String MEMORY = "memory";
-	
-	private final Bit ZERO;
-	private final Bit ONE;
-	private final int memorySize;
 
 	private boolean debug;
 
-	public CPU(NativeBitFactory factory, NativeStateFactory stateFactory, int[] memoryContents, boolean debug) {
+	public CPU(NativeBitFactory factory, StateFactory stateFactory,
+			int[] memoryContents, boolean debug) {
 		this.debug = debug;
-
-		ONE = factory.encodeBit(1);
-		ZERO = factory.encodeBit(0);
 
 		stateFactory.allocateBitRegister(ALU_CARRY);
 		stateFactory.allocateBitRegister(ALU_MINUS);
 		stateFactory.allocateBitRegister(ALU_ZERO);
-		
-		stateFactory.allocateWordRegister(AC);
-		stateFactory.allocateWordRegister(PC);
-		
-		stateFactory.allocateWordArrayRegister(MEMORY, memoryContents);
-		memorySize = memoryContents.length;
+
+		stateFactory.allocateWordRegister(AC, 8);
+		stateFactory.allocateWordRegister(PC, 8);
+
+		stateFactory.allocateWordArrayRegister(MEMORY, 13, memoryContents);
 	}
 
 	private Word memoryRead(Word[] memory, Word addr, int size) {
 		// Unroll the first time through the loop
 		Word b1 = addr.eq(0).and(memory[0].bits(size - 1, 0));
 
-		for (int row = 1; row < memorySize; row++) {
+		for (int row = 1; row < memory.length; row++) {
 			b1 = b1.xor(addr.eq(row).and(memory[row].bits(size - 1, 0)));
 		}
 
@@ -49,14 +42,14 @@ public class CPU {
 	 * state of the write flag.
 	 */
 	private Word memoryAccess(Word[] memory, Word addr, Word reg, Bit write) {
-		Bit[] r = new Bit[memorySize];
+		Bit[] r = new Bit[memory.length];
 
 		// Unroll the first time through the loop
 		r[0] = addr.eq(0);
 		memory[0] = (r[0].and(write)).ifThen(reg, memory[0]);
 		Word b1 = r[0].and(memory[0].bits(7, 0));
 
-		for (int row = 1; row < memorySize; row++) {
+		for (int row = 1; row < memory.length; row++) {
 			r[row] = addr.eq(row);
 			memory[row] = (r[row].and(write)).ifThen(reg, memory[row]);
 			b1 = b1.xor(r[row].and(memory[row].bits(7, 0)));
@@ -73,7 +66,7 @@ public class CPU {
 		Bit alu_minus = state.getBitRegister(ALU_MINUS);
 		Bit alu_zero = state.getBitRegister(ALU_ZERO);
 		Word[] memory = state.getWordArrayRegister(MEMORY);
-		
+
 		debug("***** tick *****");
 
 		debug("pc =", pc);
@@ -121,7 +114,8 @@ public class CPU {
 		debug("cmd_param:", cmd_param, "cmd_a:", cmd_a);
 
 		// CMP (two's compliment, then add)
-		Word b_cmp = cmd_a.ifThen(load_arg, cmd_param).not().add(ONE).add(ac);
+		Word b_cmp = cmd_a.ifThen(load_arg, cmd_param).not().add(state.one())
+				.add(ac);
 
 		debug("cmp:", b_cmp);
 
@@ -171,22 +165,20 @@ public class CPU {
 
 		alu_carry = cmd_add.ifThen(
 				carry_add,
-				cmd_rol.ifThen(
-						carry_rol,
-						cmd_ror.ifThen(
-								carry_ror,
-								cmd_clc.ifThen(ZERO,
-										cmd_sec.ifThen(ONE, alu_carry)))));
+				cmd_rol.ifThen(carry_rol, cmd_ror.ifThen(
+						carry_ror,
+						cmd_clc.ifThen(state.zero(),
+								cmd_sec.ifThen(state.one(), alu_carry)))));
 
 		debug("carry:", alu_carry, "minus:", alu_minus, "zero:", alu_zero);
 
-		Word pc_linear = pc.add(ONE);
+		Word pc_linear = pc.add(state.one());
 
 		pc = cmd_beq.ifThen(
 				alu_zero.ifThen(cmd_param, pc_linear),
 				cmd_bmi.ifThen(alu_minus.ifThen(cmd_param, pc_linear),
 						cmd_jmp.ifThen(cmd_param, pc_linear)));
-		
+
 		// Update CPU state
 		state.setBitRegister(ALU_CARRY, alu_carry);
 		state.setBitRegister(ALU_MINUS, alu_minus);

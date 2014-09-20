@@ -11,10 +11,12 @@ public class LoggingBit implements NativeBit {
 	private int[] children;
 	private int nodeIndex;
 	private ArrayList<Integer> backRefs = new ArrayList<>();
+	private String name;
 
-	public LoggingBit(LoggingBitFactory bitFactory, LoggingBitNodeType type,
-			int[] children) {
+	public LoggingBit(LoggingBitFactory bitFactory, String name,
+			LoggingBitNodeType type, int[] children) {
 		this.bitFactory = bitFactory;
+		this.name = name;
 		this.type = type;
 		this.children = children;
 		this.nodeIndex = bitFactory.register(this);
@@ -22,25 +24,27 @@ public class LoggingBit implements NativeBit {
 
 	@Override
 	public NativeBit xor(NativeBit n) {
-		return bitFactory.create(LoggingBitNodeType.XOR, new int[] {
+		return bitFactory.create(null, LoggingBitNodeType.XOR, new int[] {
 				this.nodeIndex, ((LoggingBit) n).nodeIndex });
 	}
 
 	@Override
 	public NativeBit and(NativeBit n) {
-		return bitFactory.create(LoggingBitNodeType.AND, new int[] {
+		return bitFactory.create(null, LoggingBitNodeType.AND, new int[] {
 				this.nodeIndex, ((LoggingBit) n).nodeIndex });
 	}
 
 	@Override
 	public NativeBit not() {
-		return bitFactory.create(LoggingBitNodeType.NOT,
+		return bitFactory.create(null, LoggingBitNodeType.NOT,
 				new int[] { this.nodeIndex });
 	}
 
 	public String describe() {
 		switch (type) {
-		case TERMINAL:
+		case INPUT:
+			return Integer.toString(nodeIndex);
+		case OUTPUT:
 			return Integer.toString(nodeIndex);
 		case AND:
 			return bitFactory.get(children[0]).describe() + " & "
@@ -57,14 +61,21 @@ public class LoggingBit implements NativeBit {
 
 	public String toString() {
 		switch (type) {
-		case TERMINAL:
-			return "=" + nodeIndex;
+		case INPUT:
+			return "IN: " + bitFactory.nameOf(nodeIndex);
+		case OUTPUT:
+			return "OUT: " + bitFactory.nameOf(nodeIndex) + " = " + bitFactory.nameOf(children[0]);
 		case AND:
-			return children[0] + " & " + children[1] + " -> " + nodeIndex;
+			return bitFactory.nameOf(nodeIndex) + " = "
+					+ bitFactory.nameOf(children[0]) + " & "
+					+ bitFactory.nameOf(children[1]);
 		case XOR:
-			return children[0] + " ^ " + children[1] + " -> " + nodeIndex;
+			return bitFactory.nameOf(nodeIndex) + " = "
+					+ bitFactory.nameOf(children[0]) + " ^ "
+					+ bitFactory.nameOf(children[1]);
 		case NOT:
-			return "!" + children[0] + " -> " + nodeIndex;
+			return bitFactory.nameOf(nodeIndex) + " = !"
+					+ bitFactory.nameOf(children[0]);
 		}
 
 		return "";
@@ -78,6 +89,16 @@ public class LoggingBit implements NativeBit {
 		return nodeIndex;
 	}
 
+	public String name() {
+		return name;
+	}
+
+	public void name(String name) {
+		if (this.name != null)
+			throw new IllegalStateException("This node already has a name");
+		this.name = name;
+	}
+	
 	public void addBackRef(int index) {
 		backRefs.add(index);
 	}
