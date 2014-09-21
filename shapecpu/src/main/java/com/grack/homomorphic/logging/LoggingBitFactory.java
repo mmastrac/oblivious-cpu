@@ -2,6 +2,13 @@ package com.grack.homomorphic.logging;
 
 import java.util.ArrayList;
 
+import com.grack.homomorphic.graph.AndNode;
+import com.grack.homomorphic.graph.Graph;
+import com.grack.homomorphic.graph.InputNode;
+import com.grack.homomorphic.graph.Node;
+import com.grack.homomorphic.graph.NotNode;
+import com.grack.homomorphic.graph.OutputNode;
+import com.grack.homomorphic.graph.XorNode;
 import com.grack.homomorphic.ops.Bit;
 import com.grack.homomorphic.ops.NativeBit;
 import com.grack.homomorphic.ops.NativeBitFactory;
@@ -88,5 +95,41 @@ public class LoggingBitFactory implements NativeBitFactory {
 			return bit.name();
 		
 		return Integer.toString(bit.index());
+	}
+	
+	public Graph toGraph() {
+		Graph graph = new Graph();
+		ArrayList<Node> nodes = new ArrayList<>();
+		for (LoggingBit bit : bits) {
+			switch (bit.type()) {
+			case INPUT: {
+				InputNode inputNode = new InputNode(bit.name());
+				graph.addInput(inputNode);
+				nodes.add(inputNode);
+				break;
+			}
+			case OUTPUT: {
+				OutputNode outputNode = new OutputNode(bit.name(), nodes.get(bit.children()[0]));
+				graph.addOutput(outputNode);
+				nodes.add(outputNode);
+				break;
+			}
+			case AND: {
+				AndNode andNode = new AndNode(nodes.get(bit.children()[0]), nodes.get(bit.children()[1]));
+				nodes.add(andNode);
+				break;
+			}
+			case XOR: {
+				XorNode xorNode = new XorNode(nodes.get(bit.children()[0]), nodes.get(bit.children()[1]));
+				nodes.add(xorNode);
+				break;
+			}
+			case NOT: {
+				NotNode notNode = new NotNode(nodes.get(bit.children()[0]));
+				nodes.add(notNode);
+			}
+			}
+		}
+		return graph;
 	}
 }

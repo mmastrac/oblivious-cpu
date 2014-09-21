@@ -13,6 +13,7 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
+import com.grack.homomorphic.graph.Graph;
 import com.grack.homomorphic.light.LightBitFactory;
 import com.grack.homomorphic.light.StandardStateFactory;
 import com.grack.homomorphic.logging.LoggingBitFactory;
@@ -79,18 +80,11 @@ public class CPUTest {
 		// Bit bit = state.getBitRegister("alu_carry");
 		// System.out.println(((LoggingBit) bit.nativeBit()).describe());
 
+		Graph graph = factory.toGraph();
+		
 		try (Writer w = new OutputStreamWriter(new FileOutputStream(
 				"/tmp/output.txt"))) {
-			w.write("digraph G {\n");
-			for (int i = 0; i < factory.nodeCount(); i++) {
-				String s = factory.get(i).toString();
-				if (s.length() > 0) {
-					w.write(s);
-					w.write(';');
-					w.write('\n');
-				}
-			}
-			w.write("}\n");
+			graph.toC(w);
 		}
 	}
 
