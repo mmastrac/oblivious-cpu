@@ -95,6 +95,8 @@ public class Graph {
 								// AND 1 means no-op
 								output.replaceWith(otherInput);
 							}
+						} else {
+							throw new IllegalStateException("Unable to fold constant into " + output.getClass());
 						}
 
 						continue top;
@@ -115,8 +117,6 @@ public class Graph {
 			removeDuplicatePaths(processed, inputNode);
 		}
 	}
-
-	static int nodes;
 
 	private void removeDuplicatePaths(Set<Node> processed, Node node) {
 		if (!processed.add(node))
