@@ -3,6 +3,7 @@ package com.grack.homomorphic.logging;
 import java.util.ArrayList;
 
 import com.grack.homomorphic.graph.AndNode;
+import com.grack.homomorphic.graph.ConstantNode;
 import com.grack.homomorphic.graph.Graph;
 import com.grack.homomorphic.graph.InputNode;
 import com.grack.homomorphic.graph.Node;
@@ -103,7 +104,13 @@ public class LoggingBitFactory implements NativeBitFactory {
 		for (LoggingBit bit : bits) {
 			switch (bit.type()) {
 			case INPUT: {
-				InputNode inputNode = new InputNode(bit.name());
+				InputNode inputNode;
+				if (bit.name().equals("zero"))
+					inputNode = new ConstantNode("zero", 0);
+				else if (bit.name().equals("one"))
+					inputNode = new ConstantNode("one", 1);
+				else
+					inputNode = new InputNode(bit.name());
 				graph.addInput(inputNode);
 				nodes.add(inputNode);
 				break;

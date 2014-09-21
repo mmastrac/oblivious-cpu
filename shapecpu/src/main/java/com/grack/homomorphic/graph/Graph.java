@@ -5,8 +5,12 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 
 public class Graph {
 	private ArrayList<InputNode> inputs = new ArrayList<>();
@@ -35,15 +39,73 @@ public class Graph {
 		}
 	}
 
-//	public Graph optimize() {
-//		// phase 1: remove duplicate paths
-//
-//		Graph out = new Graph();
-//		visitOut((node) -> {
-//			
-//			return true;
-//		}, null);
-//	}
+	public int nodeCount() {
+		HashSet<Node> nodes = new HashSet<>();
+		visitIn((node) -> { return nodes.add(node); }, null);
+		return nodes.size();
+	}
+	
+	public void optimize() {
+		int before = nodeCount();
+		
+		// phase 1: remove duplicate paths
+		removeDuplicatePaths();
+		
+		int after = nodeCount();
+		
+		System.out.println(before + " -> " + after);
+	}
+
+	private void removeDuplicatePaths() {
+		Set<Node> processed = new HashSet<>();
+		for (InputNode inputNode : inputs) {
+			removeDuplicatePaths(processed, inputNode);
+		}
+	}
+
+	static int nodes;
+	
+	private void removeDuplicatePaths(Set<Node> processed, Node node) {
+		if (!processed.add(node))
+			return;
+		
+		// Let's just repeat this until we find no more dupes
+		top: while (true) {
+			Iterable<Node> candidates = node.outputs();
+			for (Node candidate : candidates) {
+				// Don't remove these
+				if (candidate instanceof OutputNode)
+					continue;
+				
+				for (Node other : candidates) {
+					// Obviously don't compare against yourself
+					if (candidate == other)
+						continue;
+
+					// Must be the same type
+					if (candidate.getClass() != other.getClass())
+						continue;
+
+					if (candidate.sameInputsAs(other)) {
+						// Found a dupe, so let's remove "other" from the tree
+						// and replace references to it with candidate
+						other.replaceWith(candidate);
+						
+						// Now we let the GC just reclaim it
+						continue top;
+					}
+				}
+			}
+			
+			// No dupes found
+			break;
+		}
+
+		// Recurse
+		for (Node output : node.outputs()) {
+			removeDuplicatePaths(processed, output);
+		}
+	}
 
 	public void toC(Writer w) throws IOException {
 		w.write("node_t input[" + inputs.size() + "]\n");

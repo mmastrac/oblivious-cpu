@@ -81,6 +81,7 @@ public class CPUTest {
 		// System.out.println(((LoggingBit) bit.nativeBit()).describe());
 
 		Graph graph = factory.toGraph();
+		graph.optimize();
 		
 		try (Writer w = new OutputStreamWriter(new FileOutputStream(
 				"/tmp/output.txt"))) {
