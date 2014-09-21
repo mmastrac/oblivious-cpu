@@ -41,19 +41,72 @@ public class Graph {
 
 	public int nodeCount() {
 		HashSet<Node> nodes = new HashSet<>();
-		visitIn((node) -> { return nodes.add(node); }, null);
+		visitIn((node) -> {
+			return nodes.add(node);
+		}, null);
 		return nodes.size();
 	}
-	
+
 	public void optimize() {
 		int before = nodeCount();
-		
-		// phase 1: remove duplicate paths
+
+		// phase 1: fold constants
+		foldConstants();
+
+		// phase 2: remove duplicate paths
 		removeDuplicatePaths();
-		
+
 		int after = nodeCount();
-		
+
 		System.out.println(before + " -> " + after);
+	}
+
+	private void foldConstants() {
+		Set<ConstantNode> inputsToRemove = new HashSet<>();
+
+		top: while (true) {
+			for (InputNode inputNode : inputs) {
+				if (inputNode instanceof ConstantNode) {
+					ConstantNode constant = (ConstantNode) inputNode;
+					inputsToRemove.add(constant);
+					int value = constant.value();
+
+					for (Node output : inputNode.outputs()) {
+						Node otherInput;
+						if (output.input(0) == inputNode) {
+							otherInput = output.input(1);
+						} else {
+							otherInput = output.input(0);
+						}
+
+						if (output instanceof XorNode) {
+							if (value == 0) {
+								// XOR 0 means no-op
+								output.replaceWith(otherInput);
+							} else {
+								// XOR 1 means not
+								output.replaceWith(new NotNode(otherInput));
+							}
+						} else if (output instanceof AndNode) {
+							if (value == 0) {
+								// AND 0 means zero (we will re-attach the zero higher up the tree)
+								output.replaceWith(constant);
+							} else {
+								// AND 1 means no-op
+								output.replaceWith(otherInput);
+							}
+						}
+
+						continue top;
+					}
+				}
+			}
+			
+			// No modifications
+			break;
+		}
+
+		inputs.removeAll(inputsToRemove);
 	}
 
 	private void removeDuplicatePaths() {
@@ -64,11 +117,11 @@ public class Graph {
 	}
 
 	static int nodes;
-	
+
 	private void removeDuplicatePaths(Set<Node> processed, Node node) {
 		if (!processed.add(node))
 			return;
-		
+
 		// Let's just repeat this until we find no more dupes
 		top: while (true) {
 			Iterable<Node> candidates = node.outputs();
@@ -76,7 +129,7 @@ public class Graph {
 				// Don't remove these
 				if (candidate instanceof OutputNode)
 					continue;
-				
+
 				for (Node other : candidates) {
 					// Obviously don't compare against yourself
 					if (candidate == other)
@@ -90,13 +143,13 @@ public class Graph {
 						// Found a dupe, so let's remove "other" from the tree
 						// and replace references to it with candidate
 						other.replaceWith(candidate);
-						
+
 						// Now we let the GC just reclaim it
 						continue top;
 					}
 				}
 			}
-			
+
 			// No dupes found
 			break;
 		}
