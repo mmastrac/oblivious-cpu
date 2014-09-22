@@ -10,7 +10,6 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.UnrecognizedOptionException;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -28,7 +27,10 @@ public class Main {
 		try {
 			CommandLine line = parser.parse(options, args);
 			String[] cmd = line.getArgs();
-
+			
+			if (cmd.length < 1)
+				throw new ParseException("Command expected");
+			
 			PrintStream out = line.getOptionValue("o") == null ? System.out
 					: new PrintStream(new File(line.getOptionValue("o")));
 
@@ -43,7 +45,7 @@ public class Main {
 				run(cmd[1]);
 				break;
 			}
-		} catch (UnrecognizedOptionException e) {
+		} catch (ParseException e) {
 			System.err.println(e.getMessage());
 			HelpFormatter formatter = new HelpFormatter();
 			formatter.printHelp("shapecpu.jar", options);

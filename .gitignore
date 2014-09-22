@@ -1,3 +1,7 @@
-shapecpu/target
+.DS_Store
+*/target
+*/.settings
+*/.project
+*/.classpath
 workspace
 

@@ -5,13 +5,12 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
-
+/**
+ * Represents a graph of dataflow in a HME system.
+ */
 public class Graph {
 	private ArrayList<InputNode> inputs = new ArrayList<>();
 	private ArrayList<OutputNode> outputs = new ArrayList<>();

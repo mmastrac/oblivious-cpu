@@ -31,9 +31,8 @@ public class LoggingStateFactory implements StateFactory {
 	}
 
 	@Override
-	public void allocateWordArrayRegister(String name, int width, int[] contents) {
-		Word[] words = bitFactory.createNamedInputWordArray(name, width,
-				contents.length);
+	public void allocateWordArrayRegister(String name, int width, int size) {
+		Word[] words = bitFactory.createNamedInputWordArray(name, width, size);
 		wordArrays.put(name, words);
 	}
 

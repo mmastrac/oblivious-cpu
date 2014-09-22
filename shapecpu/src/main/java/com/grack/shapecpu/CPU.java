@@ -1,5 +1,6 @@
 package com.grack.shapecpu;
 
+import com.grack.homomorphic.engine.Engine;
 import com.grack.homomorphic.ops.Bit;
 import com.grack.homomorphic.ops.NativeBitFactory;
 import com.grack.homomorphic.ops.State;
@@ -7,7 +8,7 @@ import com.grack.homomorphic.ops.StateFactory;
 import com.grack.homomorphic.ops.Word;
 import com.grack.homomorphic.ops.WordAndBit;
 
-public class CPU {
+public class CPU implements Engine {
 	private static final String ALU_CARRY = "alu_carry";
 	private static final String ALU_MINUS = "alu_minus";
 	private static final String ALU_ZERO = "alu_zero";
@@ -15,12 +16,11 @@ public class CPU {
 	private static final String AC = "ac";
 	private static final String MEMORY = "memory";
 
-	private boolean debug;
+	public CPU() {
+	}
 
-	public CPU(NativeBitFactory factory, StateFactory stateFactory,
-			int[] memoryContents, boolean debug) {
-		this.debug = debug;
-
+	@Override
+	public void initialize(NativeBitFactory factory, StateFactory stateFactory) {
 		stateFactory.allocateBitRegister(ALU_CARRY);
 		stateFactory.allocateBitRegister(ALU_MINUS);
 		stateFactory.allocateBitRegister(ALU_ZERO);
@@ -28,10 +28,10 @@ public class CPU {
 		stateFactory.allocateWordRegister(AC, 8);
 		stateFactory.allocateWordRegister(PC, 8);
 
-		stateFactory.allocateWordArrayRegister(MEMORY, 13, memoryContents);
+		stateFactory.allocateWordArrayRegister(MEMORY, 13, 256);
 	}
-
-	private Word memoryRead(Word[] memory, Word addr, int size) {
+	
+	private Word memoryRead(State state, Word[] memory, Word addr, int size) {
 		// Unroll the first time through the loop
 		Word b1 = addr.eq(0).and(memory[0].bits(size - 1, 0));
 
@@ -39,7 +39,7 @@ public class CPU {
 			b1 = b1.xor(addr.eq(row).and(memory[row].bits(size - 1, 0)));
 		}
 
-		debug("b1", b1, addr);
+		state.debug("b1", b1, addr);
 
 		return b1;
 	}
@@ -48,7 +48,7 @@ public class CPU {
 	 * Reads or writes a memory address to/from a register, depending on the
 	 * state of the write flag.
 	 */
-	private Word memoryAccess(Word[] memory, Word addr, Word reg, Bit write) {
+	private Word memoryAccess(State state, Word[] memory, Word addr, Word reg, Bit write) {
 		Bit[] r = new Bit[memory.length];
 
 		// Unroll the first time through the loop
@@ -62,7 +62,7 @@ public class CPU {
 			b1 = b1.xor(r[row].and(memory[row].bits(7, 0)));
 		}
 
-		debug("b1", b1, addr, reg, write);
+		state.debug("b1", b1, addr, reg, write);
 		return b1;
 	}
 
@@ -74,18 +74,18 @@ public class CPU {
 		Bit alu_zero = state.getBitRegister(ALU_ZERO);
 		Word[] memory = state.getWordArrayRegister(MEMORY);
 
-		debug("***** tick *****");
+		state.debug("***** tick *****");
 
-		debug("pc =", pc);
-		debug("ac =", ac);
+		state.debug("pc =", pc);
+		state.debug("ac =", ac);
 
-		Word cmd = memoryRead(memory, pc, 13);
+		Word cmd = memoryRead(state, memory, pc, 13);
 		Word cmd_param = cmd.bits(7, 0);
 
-		Word load_arg = memoryRead(memory, cmd_param, 8);
+		Word load_arg = memoryRead(state, memory, cmd_param, 8);
 
-		debug("cmd =", cmd);
-		debug("load_arg =", load_arg);
+		state.debug("cmd =", cmd);
+		state.debug("load_arg =", load_arg);
 
 		// Bytecode looks like:
 		// | address_flag[1] | cmd[4] | data[8] |
@@ -109,7 +109,7 @@ public class CPU {
 		Bit cmd_cmp = cmd_op.eq(1); // Compare ac with immediate or
 									// indirect
 
-		debug("Command select: ", "store:", cmd_store, "load:", cmd_load,
+		state.debug("Command select: ", "store:", cmd_store, "load:", cmd_load,
 				"rol:", cmd_rol, "ror:", cmd_ror, "add:", cmd_add, "clc:",
 				cmd_clc, "sec:", cmd_sec, "xor:", cmd_xor, "and:", cmd_and,
 				"or:", cmd_or, "beq:", cmd_beq, "jmp:", cmd_jmp, "la:", cmd_la,
@@ -118,13 +118,13 @@ public class CPU {
 		// Address?
 		Bit cmd_a = cmd.bit(12);
 
-		debug("cmd_param:", cmd_param, "cmd_a:", cmd_a);
+		state.debug("cmd_param:", cmd_param, "cmd_a:", cmd_a);
 
 		// CMP (two's compliment, then add)
 		Word b_cmp = cmd_a.ifThen(load_arg, cmd_param).not().add(state.one())
 				.add(ac);
 
-		debug("cmp:", b_cmp);
+		state.debug("cmp:", b_cmp);
 
 		// ROR
 		Bit carry_ror = ac.bit(0);
@@ -142,11 +142,11 @@ public class CPU {
 		Word b_add = cmd_a.ifThen(add_2.getWord(), add_1.getWord());
 		Bit carry_add = cmd_a.ifThen(add_2.getBit(), add_1.getBit());
 
-		debug("add1:", add_1.getWord(), add_1.getBit(), "add2:",
+		state.debug("add1:", add_1.getWord(), add_1.getBit(), "add2:",
 				add_2.getWord(), add_2.getBit(), "b_add:", b_add, "carry_add",
 				carry_add);
 
-		Word load_val = memoryAccess(memory, cmd_param, ac, cmd_store);
+		Word load_val = memoryAccess(state, memory, cmd_param, ac, cmd_store);
 
 		Bit ac_unchanged = cmd_sec.xor(cmd_clc).xor(cmd_beq).xor(cmd_bmi)
 				.xor(cmd_cmp).xor(cmd_jmp).xor(cmd_store);
@@ -163,7 +163,7 @@ public class CPU {
 		ac_new = ac_new.xor(ac_unchanged.and(ac));
 
 		ac = ac_new;
-		debug("ac =", ac);
+		state.debug("ac =", ac);
 
 		alu_zero = (cmd_cmp.ifThen(b_cmp.eq(0), ac.eq(0)).or(alu_zero
 				.and(cmd_bmi.or(cmd_beq))));
@@ -177,7 +177,7 @@ public class CPU {
 						cmd_clc.ifThen(state.zero(),
 								cmd_sec.ifThen(state.one(), alu_carry)))));
 
-		debug("carry:", alu_carry, "minus:", alu_minus, "zero:", alu_zero);
+		state.debug("carry:", alu_carry, "minus:", alu_minus, "zero:", alu_zero);
 
 		Word pc_linear = pc.add(state.one());
 
@@ -193,15 +193,5 @@ public class CPU {
 		state.setWordRegister(AC, ac);
 		state.setWordRegister(PC, pc);
 		state.setWordArrayRegister(MEMORY, memory);
-	}
-
-	private void debug(Object... things) {
-		if (!debug)
-			return;
-
-		for (Object thing : things) {
-			System.out.print(thing + " ");
-		}
-		System.out.println();
 	}
 }

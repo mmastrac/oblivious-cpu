@@ -64,7 +64,8 @@ public class CPUTest {
 	public void cpuTurnsOn() {
 		LightBitFactory factory = new LightBitFactory();
 		StateFactory stateFactory = new StandardStateFactory(factory);
-		CPU cpu = new CPU(factory, stateFactory, memory, false);
+		CPU cpu = new CPU();
+		cpu.initialize(factory, stateFactory);
 		State state = stateFactory.createState();
 		cpu.tick(state);
 	}
@@ -73,7 +74,8 @@ public class CPUTest {
 	public void cpuLogging() throws FileNotFoundException, IOException {
 		LoggingBitFactory factory = new LoggingBitFactory();
 		LoggingStateFactory stateFactory = new LoggingStateFactory(factory);
-		CPU cpu = new CPU(factory, stateFactory, memory, false);
+		CPU cpu = new CPU();
+		cpu.initialize(factory, stateFactory);
 		State state = stateFactory.createState();
 		cpu.tick(state);
 
@@ -93,7 +95,8 @@ public class CPUTest {
 	public void cpuTicksTwice() {
 		LightBitFactory factory = new LightBitFactory();
 		StateFactory stateFactory = new StandardStateFactory(factory);
-		CPU cpu = new CPU(factory, stateFactory, memory, false);
+		CPU cpu = new CPU();
+		cpu.initialize(factory, stateFactory);
 		State state = stateFactory.createState();
 		cpu.tick(state);
 		cpu.tick(state);
@@ -103,7 +106,8 @@ public class CPUTest {
 	public void cpuTicksThrice() {
 		LightBitFactory factory = new LightBitFactory();
 		StateFactory stateFactory = new StandardStateFactory(factory);
-		CPU cpu = new CPU(factory, stateFactory, memory, false);
+		CPU cpu = new CPU();
+		cpu.initialize(factory, stateFactory);
 		State state = stateFactory.createState();
 		cpu.tick(state);
 		cpu.tick(state);
@@ -114,7 +118,8 @@ public class CPUTest {
 	public void cpuTicks300() {
 		LightBitFactory factory = new LightBitFactory();
 		StateFactory stateFactory = new StandardStateFactory(factory);
-		CPU cpu = new CPU(factory, stateFactory, memory, false);
+		CPU cpu = new CPU();
+		cpu.initialize(factory, stateFactory);
 		State state = stateFactory.createState();
 		for (int i = 0; i < 300; i++) {
 			cpu.tick(state);
@@ -128,7 +133,8 @@ public class CPUTest {
 	public void cpuTicksUntilDone() {
 		LightBitFactory factory = new LightBitFactory();
 		StateFactory stateFactory = new StandardStateFactory(factory);
-		CPU cpu = new CPU(factory, stateFactory, memory, false);
+		CPU cpu = new CPU();
+		cpu.initialize(factory, stateFactory);
 		State state = stateFactory.createState();
 
 		long lastPC = -1;

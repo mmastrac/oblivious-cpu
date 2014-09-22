@@ -30,10 +30,10 @@ public class StandardStateFactory implements StateFactory {
 	}
 
 	@Override
-	public void allocateWordArrayRegister(String name, int width, int[] contents) {
-		Word[] words = new Word[contents.length];
-		for (int i = 0; i < contents.length; i++) {
-			words[i] = bitFactory.encodeWord(contents[i], width);
+	public void allocateWordArrayRegister(String name, int width, int size) {
+		Word[] words = new Word[size];
+		for (int i = 0; i < size; i++) {
+			words[i] = bitFactory.encodeWord(0, width);
 		}
 		wordArrays.put(name, words);
 	}

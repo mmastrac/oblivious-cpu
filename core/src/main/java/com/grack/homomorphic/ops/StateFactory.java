@@ -8,7 +8,7 @@ public interface StateFactory {
 
 	void allocateBitRegister(String name);
 
-	void allocateWordArrayRegister(String name, int width, int[] contents);
+	void allocateWordArrayRegister(String name, int width, int size);
 
 	State createState();
 }
