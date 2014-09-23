@@ -10,7 +10,6 @@ To run:
 TODO:
 
   * Proper documentation
-  * An assembler like the original shape-cpu project
   * A new, more optimal CPU
   * An implementation of C. Gentry's fully homomorphic system (perhaps through libScarab)
 
