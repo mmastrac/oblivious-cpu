@@ -13,6 +13,7 @@ import com.google.common.io.Files;
 import com.grack.homomorphic.light.LightBitFactory;
 import com.grack.homomorphic.light.StandardStateFactory;
 import com.grack.homomorphic.ops.State;
+import com.grack.homomorphic.ops.Word;
 import com.grack.shapecpu.assembler.Compiler;
 import com.grack.shapecpu.assembler.Parser;
 import com.grack.shapecpu.assembler.Program;
@@ -26,7 +27,8 @@ public class Main {
 		if ((Boolean) parsed.get("run")) {
 			int ticks = parsed.get("--ticks") == null ? 1000 : Integer
 					.parseInt((String) parsed.get("--ticks"));
-			run((String) parsed.get("<asm-or-obj-file>"), ticks);
+			run((String) parsed.get("<asm-or-obj-file>"), ticks,
+					(Boolean) parsed.get("--debug"));
 			return;
 		}
 
@@ -48,7 +50,8 @@ public class Main {
 		}
 	}
 
-	private static void run(String file, int ticks) throws IOException {
+	private static void run(String file, int ticks, boolean debug)
+			throws IOException {
 		System.err.println("Running " + file + " for " + ticks + " tick(s)");
 		Map<String, Object> initialState = new HashMap<>();
 
@@ -72,7 +75,7 @@ public class Main {
 		CPU cpu = new CPU();
 		LightBitFactory factory = new LightBitFactory();
 		StandardStateFactory stateFactory = new StandardStateFactory(factory,
-				initialState);
+				initialState, debug);
 		cpu.initialize(factory, stateFactory);
 
 		State state = stateFactory.createState();
@@ -80,7 +83,14 @@ public class Main {
 		for (int i = 0; i < ticks; i++) {
 			cpu.tick(state);
 		}
-		
+
+		Word[] memory = state.getWordArrayRegister("memory");
+		for (int i = 0; i < memory.length; i++) {
+			Word mem = memory[i].and(factory.encodeWord(0xff, 8));
+			System.err.println(String.format("%08x: %s  %s", i, mem,
+					factory.extract(mem)));
+		}
+
 		System.err.println("XOR count = " + factory.getXorCount());
 		System.err.println("AND count = " + factory.getAndCount());
 	}

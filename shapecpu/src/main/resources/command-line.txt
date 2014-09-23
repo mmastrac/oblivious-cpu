@@ -1,8 +1,8 @@
 Usage:
-  shapecpu run <asm-or-obj-file> [--ticks=<ticks>]
+  shapecpu run <asm-or-obj-file> [--ticks=<ticks>] [--debug]
   shapecpu assemble <asm-file> [-o <object-file>]
   shapecpu pretty <asm-file> [-o <pretty-asm-file>] [--process-labels]
-	
+
 Options:
   -h --help  Show help
-  --debug    Enable debugging where posible
+  --debug    Enable debugging where possible

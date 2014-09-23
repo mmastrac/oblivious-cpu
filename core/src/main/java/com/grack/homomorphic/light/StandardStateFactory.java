@@ -15,15 +15,17 @@ public class StandardStateFactory implements StateFactory {
 	private static final Map<String, Word[]> wordArrays = new HashMap<>();
 	private NativeBitFactory bitFactory;
 	private Map<String, Object> initialState;
+	private boolean debug;
 
 	public StandardStateFactory(NativeBitFactory bitFactory) {
 		this.bitFactory = bitFactory;
 	}
 
 	public StandardStateFactory(NativeBitFactory bitFactory,
-			Map<String, Object> initialState) {
+			Map<String, Object> initialState, boolean debug) {
 		this.bitFactory = bitFactory;
 		this.initialState = initialState;
+		this.debug = debug;
 	}
 
 	@Override
@@ -89,6 +91,6 @@ public class StandardStateFactory implements StateFactory {
 	@Override
 	public State createState() {
 		return new StandardState(bitFactory.encodeBit(1),
-				bitFactory.encodeBit(0), bits, words, wordArrays);
+				bitFactory.encodeBit(0), bits, words, wordArrays, debug);
 	}
 }

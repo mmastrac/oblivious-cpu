@@ -15,12 +15,13 @@ public class StandardState implements State {
 	private boolean debug;
 
 	public StandardState(Bit one, Bit zero, Map<String, Bit> bits,
-			Map<String, Word> words, Map<String, Word[]> wordArrays) {
+			Map<String, Word> words, Map<String, Word[]> wordArrays, boolean debug) {
 		this.one = one;
 		this.zero = zero;
 		this.bits = bits;
 		this.words = words;
 		this.wordArrays = wordArrays;
+		this.debug = debug;
 	}
 
 	public Bit one() {
