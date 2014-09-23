@@ -1,5 +1,6 @@
 package com.grack.shapecpu;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.FileNotFoundException;
@@ -7,11 +8,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import com.grack.homomorphic.graph.Graph;
 import com.grack.homomorphic.light.LightBitFactory;
@@ -20,11 +23,13 @@ import com.grack.homomorphic.logging.LoggingBitFactory;
 import com.grack.homomorphic.logging.LoggingStateFactory;
 import com.grack.homomorphic.ops.State;
 import com.grack.homomorphic.ops.StateFactory;
+import com.grack.homomorphic.ops.Word;
 
 public class CPUTest {
 	private int[] memory;
 	private int[] output;
-
+	private Map<String, Object> initialState;
+	
 	@Before
 	public void setup() throws IOException {
 		String mem = Resources.toString(
@@ -58,12 +63,14 @@ public class CPUTest {
 			String[] bits = outputContents[i].trim().split("  ");
 			output[i] = Integer.valueOf(bits[1]);
 		}
+		
+		initialState = ImmutableMap.of("memory", memory);
 	}
 
 	@Test
 	public void cpuTurnsOn() {
 		LightBitFactory factory = new LightBitFactory();
-		StateFactory stateFactory = new StandardStateFactory(factory);
+		StateFactory stateFactory = new StandardStateFactory(factory, initialState, false);
 		CPU cpu = new CPU();
 		cpu.initialize(factory, stateFactory);
 		State state = stateFactory.createState();
@@ -84,7 +91,7 @@ public class CPUTest {
 
 		Graph graph = factory.toGraph();
 		graph.optimize();
-		
+
 		try (Writer w = new OutputStreamWriter(new FileOutputStream(
 				"/tmp/output.txt"))) {
 			graph.toC(w);
@@ -94,7 +101,7 @@ public class CPUTest {
 	@Test
 	public void cpuTicksTwice() {
 		LightBitFactory factory = new LightBitFactory();
-		StateFactory stateFactory = new StandardStateFactory(factory);
+		StateFactory stateFactory = new StandardStateFactory(factory, initialState, false);
 		CPU cpu = new CPU();
 		cpu.initialize(factory, stateFactory);
 		State state = stateFactory.createState();
@@ -105,7 +112,7 @@ public class CPUTest {
 	@Test
 	public void cpuTicksThrice() {
 		LightBitFactory factory = new LightBitFactory();
-		StateFactory stateFactory = new StandardStateFactory(factory);
+		StateFactory stateFactory = new StandardStateFactory(factory, initialState, false);
 		CPU cpu = new CPU();
 		cpu.initialize(factory, stateFactory);
 		State state = stateFactory.createState();
@@ -117,7 +124,7 @@ public class CPUTest {
 	@Test
 	public void cpuTicks300() {
 		LightBitFactory factory = new LightBitFactory();
-		StateFactory stateFactory = new StandardStateFactory(factory);
+		StateFactory stateFactory = new StandardStateFactory(factory, initialState, false);
 		CPU cpu = new CPU();
 		cpu.initialize(factory, stateFactory);
 		State state = stateFactory.createState();
@@ -132,7 +139,7 @@ public class CPUTest {
 	@Test
 	public void cpuTicksUntilDone() {
 		LightBitFactory factory = new LightBitFactory();
-		StateFactory stateFactory = new StandardStateFactory(factory);
+		StateFactory stateFactory = new StandardStateFactory(factory, initialState, false);
 		CPU cpu = new CPU();
 		cpu.initialize(factory, stateFactory);
 		State state = stateFactory.createState();
@@ -143,15 +150,7 @@ public class CPUTest {
 			if (pc == lastPC) {
 				// Success
 				System.out.println("Total ticks: " + i);
-				for (int j = 0; j < output.length; j++) {
-					long mem = factory.extract(state
-							.getWordArrayRegister("memory")[j]) & 0xff;
-					if (mem != output[j])
-						fail();
-					// System.out.println(String.format("%3d: %s %5d", j,
-					// cpu.memory[j].toString(),
-					// mem));
-				}
+				dumpMemory(factory, state);
 				System.out.println("All memory locations match.");
 				return;
 			}
@@ -160,6 +159,17 @@ public class CPUTest {
 			cpu.tick(state);
 		}
 
+		dumpMemory(factory, state);
 		fail();
+	}
+
+	private void dumpMemory(LightBitFactory factory, State state) {
+		Word[] memory = state.getWordArrayRegister("memory");
+		for (int j = 0; j < output.length; j++) {
+			long mem = factory.extract(memory[j]) & 0xff;
+			assertEquals((long)output[j], mem);
+//			System.out.println(String.format("%3d: %s %5d", j,
+//					memory[j].toString(), mem));
+		}
 	}
 }

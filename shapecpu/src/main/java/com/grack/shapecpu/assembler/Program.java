@@ -2,9 +2,6 @@ package com.grack.shapecpu.assembler;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-
-import org.junit.internal.ArrayComparisonFailure;
 
 import com.google.common.primitives.Ints;
 

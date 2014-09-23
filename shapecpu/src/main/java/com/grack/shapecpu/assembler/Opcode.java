@@ -5,7 +5,7 @@ package com.grack.shapecpu.assembler;
  */
 public enum Opcode {
 	CMP(1),
-	CMDa(1 + 16),
+	CMPa(1 + 16),
 	BMI(2),
 	La(3 + 16),
 	J(4),

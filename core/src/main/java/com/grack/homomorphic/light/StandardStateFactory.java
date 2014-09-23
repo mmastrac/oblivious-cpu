@@ -17,10 +17,6 @@ public class StandardStateFactory implements StateFactory {
 	private Map<String, Object> initialState;
 	private boolean debug;
 
-	public StandardStateFactory(NativeBitFactory bitFactory) {
-		this.bitFactory = bitFactory;
-	}
-
 	public StandardStateFactory(NativeBitFactory bitFactory,
 			Map<String, Object> initialState, boolean debug) {
 		this.bitFactory = bitFactory;
