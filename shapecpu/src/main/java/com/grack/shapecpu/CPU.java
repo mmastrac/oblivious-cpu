@@ -30,7 +30,7 @@ public class CPU implements Engine {
 
 		stateFactory.allocateWordArrayRegister(MEMORY, 13, 256);
 	}
-	
+
 	private Word memoryRead(State state, Word[] memory, Word addr, int size) {
 		// Unroll the first time through the loop
 		Word b1 = addr.eq(0).and(memory[0].bits(size - 1, 0));
@@ -48,17 +48,18 @@ public class CPU implements Engine {
 	 * Reads or writes a memory address to/from a register, depending on the
 	 * state of the write flag.
 	 */
-	private Word memoryAccess(State state, Word[] memory, Word addr, Word reg, Bit write) {
+	private Word memoryAccess(State state, Word[] memory, Word addr, Word reg,
+			Bit write) {
 		Bit[] r = new Bit[memory.length];
 
 		// Unroll the first time through the loop
 		r[0] = addr.eq(0);
-		memory[0] = (r[0].and(write)).ifThen(reg, memory[0]);
+		memory[0] = memory[0].setBits(7, 0, (r[0].and(write)).ifThen(reg, memory[0]));
 		Word b1 = r[0].and(memory[0].bits(7, 0));
 
 		for (int row = 1; row < memory.length; row++) {
 			r[row] = addr.eq(row);
-			memory[row] = (r[row].and(write)).ifThen(reg, memory[row]);
+			memory[row] = memory[row].setBits(7, 0, (r[row].and(write)).ifThen(reg, memory[row]));
 			b1 = b1.xor(r[row].and(memory[row].bits(7, 0)));
 		}
 
@@ -109,11 +110,11 @@ public class CPU implements Engine {
 		Bit cmd_cmp = cmd_op.eq(1); // Compare ac with immediate or
 									// indirect
 
-		state.debug("Command select: ", "store:", cmd_store, "load:", cmd_load,
-				"rol:", cmd_rol, "ror:", cmd_ror, "add:", cmd_add, "clc:",
-				cmd_clc, "sec:", cmd_sec, "xor:", cmd_xor, "and:", cmd_and,
-				"or:", cmd_or, "beq:", cmd_beq, "jmp:", cmd_jmp, "la:", cmd_la,
-				"bmi:", cmd_bmi, "cmp:", cmd_cmp);
+		state.debug("Command select: ", "cmd_op", cmd_op, "store:", cmd_store,
+				"load:", cmd_load, "rol:", cmd_rol, "ror:", cmd_ror, "add:",
+				cmd_add, "clc:", cmd_clc, "sec:", cmd_sec, "xor:", cmd_xor,
+				"and:", cmd_and, "or:", cmd_or, "beq:", cmd_beq, "jmp:",
+				cmd_jmp, "la:", cmd_la, "bmi:", cmd_bmi, "cmp:", cmd_cmp);
 
 		// Address?
 		Bit cmd_a = cmd.bit(12);

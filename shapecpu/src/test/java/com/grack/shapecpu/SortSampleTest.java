@@ -25,7 +25,7 @@ import com.grack.homomorphic.ops.State;
 import com.grack.homomorphic.ops.StateFactory;
 import com.grack.homomorphic.ops.Word;
 
-public class CPUTest {
+public class SortSampleTest {
 	private int[] memory;
 	private int[] output;
 	private Map<String, Object> initialState;
@@ -33,7 +33,7 @@ public class CPUTest {
 	@Before
 	public void setup() throws IOException {
 		String mem = Resources.toString(
-				getClass().getResource("creditcard_input.txt"), Charsets.UTF_8);
+				getClass().getResource("sort_input.txt"), Charsets.UTF_8);
 		String[] memoryContents = mem.trim().split("\n");
 		// debug("memory size:", memoryContents.length);
 		memory = new int[256];
@@ -53,7 +53,7 @@ public class CPUTest {
 		}
 
 		String out = Resources
-				.toString(getClass().getResource("creditcard_output.txt"),
+				.toString(getClass().getResource("sort_output.txt"),
 						Charsets.UTF_8);
 		String[] outputContents = out.trim().split("\n");
 
@@ -64,7 +64,7 @@ public class CPUTest {
 			output[i] = Integer.valueOf(bits[1]);
 		}
 		
-		initialState = ImmutableMap.of("memory", memory);
+		initialState = ImmutableMap.of("memory", memory, "pc", 10);
 	}
 
 	@Test

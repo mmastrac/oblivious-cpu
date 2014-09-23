@@ -162,6 +162,18 @@ public class Word {
 		return new Word(bits);
 	}
 
+	public Word setBits(int topBit, int bottomBit, Word with) {
+		Bit[] bits = new Bit[size()];
+		for (int i = 0; i < size(); i++) {
+			if (i <= topBit && i >= bottomBit)
+				bits[i] = with.bit(i - bottomBit);
+			else
+				bits[i] = bit(i);
+		}
+
+		return new Word(bits);
+	}
+
 	public Word shl(int n) {
 		Bit[] bits = new Bit[size()];
 		System.arraycopy(this.bits, 0, bits, n, size() - n);
