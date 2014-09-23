@@ -3,60 +3,86 @@ package com.grack.shapecpu;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import org.docopt.Docopt;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import com.grack.homomorphic.light.LightBitFactory;
+import com.grack.homomorphic.light.StandardStateFactory;
+import com.grack.homomorphic.ops.State;
 import com.grack.shapecpu.assembler.Compiler;
 import com.grack.shapecpu.assembler.Parser;
 import com.grack.shapecpu.assembler.Program;
 
 public class Main {
-	public static void main(String[] args) throws ParseException {
-		Options options = new Options();
-		options.addOption("processlabels", false, "Process label references");
-		options.addOption("o", true,
-				"Output file (if not specified, the output is written to the console)");
-		CommandLineParser parser = new GnuParser();
-		try {
-			CommandLine line = parser.parse(options, args);
-			String[] cmd = line.getArgs();
-			
-			if (cmd.length < 1)
-				throw new ParseException("Command expected");
-			
-			PrintStream out = line.getOptionValue("o") == null ? System.out
-					: new PrintStream(new File(line.getOptionValue("o")));
+	public static void main(String[] args) throws IOException {
+		Map<String, Object> parsed = new Docopt(
+				Main.class.getResourceAsStream("/command-line.txt"),
+				Charsets.US_ASCII).withExit(true).withHelp(true).parse(args);
 
-			switch (cmd[0]) {
-			case "pretty":
-				pretty(cmd[1], line.hasOption("processlabels"), out);
-				break;
-			case "assemble":
-				assemble(cmd[1], out);
-				break;
-			case "run":
-				run(cmd[1]);
-				break;
-			}
-		} catch (ParseException e) {
-			System.err.println(e.getMessage());
-			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp("shapecpu.jar", options);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if ((Boolean) parsed.get("run")) {
+			int ticks = parsed.get("--ticks") == null ? 1000 : Integer
+					.parseInt((String) parsed.get("--ticks"));
+			run((String) parsed.get("<asm-or-obj-file>"), ticks);
+			return;
+		}
+
+		if ((Boolean) parsed.get("assemble")) {
+			PrintStream out = (Boolean) parsed.get("-o") ? new PrintStream(
+					new File((String) parsed.get("<output-file>")))
+					: System.out;
+			assemble((String) parsed.get("<asm-file>"), out);
+			return;
+		}
+
+		if ((Boolean) parsed.get("pretty")) {
+			PrintStream out = (Boolean) parsed.get("-o") ? new PrintStream(
+					new File((String) parsed.get("<output-file>")))
+					: System.out;
+			pretty((String) parsed.get("<asm-file>"),
+					(Boolean) parsed.get("--process-labels"), out);
+			return;
 		}
 	}
 
-	private static void run(String file) {
+	private static void run(String file, int ticks) throws IOException {
+		System.err.println("Running " + file + " for " + ticks + " tick(s)");
+		Map<String, Object> initialState = new HashMap<>();
 
+		if (file.endsWith(".asm")) {
+			Parser parser = new Parser(Files.asCharSource(new File(file),
+					Charsets.UTF_8));
+			Program program = parser.parse();
+			Compiler compiler = new Compiler();
+			compiler.compile(program);
+
+			initialState.put("ac", program.getInitAc().getValue());
+			initialState.put("pc", program.getInitPc().getValue());
+			initialState.put("memory", program.getProgram());
+		} else if (file.endsWith(".obj")) {
+
+		} else {
+			System.err.println("Only .obj and .asm files may be run");
+			System.exit(1);
+		}
+
+		CPU cpu = new CPU();
+		LightBitFactory factory = new LightBitFactory();
+		StandardStateFactory stateFactory = new StandardStateFactory(factory,
+				initialState);
+		cpu.initialize(factory, stateFactory);
+
+		State state = stateFactory.createState();
+
+		for (int i = 0; i < ticks; i++) {
+			cpu.tick(state);
+		}
+		
+		System.err.println("XOR count = " + factory.getXorCount());
+		System.err.println("AND count = " + factory.getAndCount());
 	}
 
 	private static void pretty(String file, boolean processLabels,

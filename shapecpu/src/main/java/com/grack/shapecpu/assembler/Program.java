@@ -2,6 +2,11 @@ package com.grack.shapecpu.assembler;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import org.junit.internal.ArrayComparisonFailure;
+
+import com.google.common.primitives.Ints;
 
 public class Program {
 	private Value initAc;
@@ -27,5 +32,15 @@ public class Program {
 	
 	public List<Line> getLines() {
 		return lines;
+	}
+	
+	public int[] getProgram() {
+		ArrayList<Integer> program = new ArrayList<Integer>();
+		for (Line line : lines) {
+			if (line.getOpcode() != null)
+				program.add(line.assemble());
+		}
+		
+		return Ints.toArray(program);
 	}
 }
