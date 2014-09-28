@@ -75,6 +75,15 @@ public class LoggingState implements State {
 	public Bit zero() {
 		return zero;
 	}
+	
+	@Override
+	public Word negativeOne(int width) {
+		Bit[] bits = new Bit[width];
+		for (int i = 0; i < width; i++)
+			bits[i] = one;
+		
+		return new Word(bits);
+	}
 
 	@Override
 	public void debug(Object... things) {

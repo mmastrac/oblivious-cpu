@@ -20,5 +20,7 @@ public interface State {
 
 	Bit zero();
 	
+	Word negativeOne(int width);
+
 	void debug(Object... things);
 }

@@ -34,6 +34,15 @@ public class StandardState implements State {
 	}
 
 	@Override
+	public Word negativeOne(int width) {
+		Bit[] bits = new Bit[width];
+		for (int i = 0; i < width; i++)
+			bits[i] = one;
+		
+		return new Word(bits);
+	}
+
+	@Override
 	public Word getWordRegister(String name) {
 		if (!words.containsKey(name))
 			throw new IllegalArgumentException("Invalid key: " + name);

@@ -217,5 +217,4 @@ public class Word {
 
 		return new Word(bits);
 	}
-
 }

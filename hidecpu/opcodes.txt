@@ -1,0 +1,44 @@
+Opcode argument:
+  [r0 + constant]        # indirect
+  [r1 + constant]
+  constant 
+  [constant]  # indirect, constant
+  
+
+r0 -> address 254?
+r1 -> address 255?
+
+aaaa b cc dddddddd
+a = opcode
+b = target register, except for store
+c = source type
+d = data
+
+# Load indirect
+mov r0, [r0]
+mov r0, label    \_ same encoding (load)
+mov r0, constant /
+mov r0, [label]    \__ same encoding (load)
+mov r0, [constant] /
+mov r0, ror [r0] <- encoded as ror
+mov r0, rol [r0]
+mov r0, not [r0]
+mov [r1], r0 <-- store 
+
+
+0  load # load          \_ mov
+1  sto # store           |
+2  ror # rotate right    |
+3  rol # rotate left     |
+4  not # invert bits    /  <- is this necessary?
+
+5  add rX, something # add
+6  sub rX, something # subtract
+7  and rX, something # and
+8  or  rX, something  # or
+9  xor rX, something # xor
+
+10 cmp rX, something # set minus, zero
+11 stf values, mask  # set flags   <- is this necessary?
+12 bra flags, mask, target # branch based on flags (minus/zero)
+13 loop r0, target   # decrement and jump if not zero
