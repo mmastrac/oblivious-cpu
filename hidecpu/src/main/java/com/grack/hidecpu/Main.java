@@ -141,7 +141,7 @@ public class Main {
 		compiler.compile(program);
 
 		program.getLines().forEach((line) -> {
-			out.println(encode(13, line.assemble()));
+			out.println(encode(15, line.assemble()));
 		});
 	}
 

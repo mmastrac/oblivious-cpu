@@ -161,6 +161,11 @@ public class Parser {
 				return parseValue(src.substring(1, src.length() - 1));
 			}
 		} else {
+			// Register load
+			if (src.equals("r0"))
+				return new Value(254);
+			if (src.equals("r1"))
+				return new Value(255);
 			return parseValue(src);
 		}
 	}
@@ -181,6 +186,9 @@ public class Parser {
 				return OpSource.CONSTANT_LOAD;
 			}
 		} else {
+			if (src.equals("r0") || src.equals("r1"))
+				return OpSource.CONSTANT_LOAD;
+			
 			return OpSource.CONSTANT;
 		}
 	}

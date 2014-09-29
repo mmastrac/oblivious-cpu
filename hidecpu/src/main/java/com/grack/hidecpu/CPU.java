@@ -132,6 +132,9 @@ public class CPU implements Engine {
 
 		state.debug("cmp:", b_cmp_sub);
 
+		// NOT
+		Word b_not = source_arg.not();
+
 		// ROR
 		Bit carry_ror = source_arg.bit(0);
 		Word b_ror = source_arg.bits(7, 1);
@@ -160,7 +163,7 @@ public class CPU implements Engine {
 
 		memoryAccess(state, memory, addr, target_arg, cmd_ops.get(Opcode.STORE));
 
-		Bit src_unchanged = cmd_ops.get(Opcode.BRA)
+		Bit target_unchanged = cmd_ops.get(Opcode.BRA).xor(cmd_ops.get(Opcode.JUMP))
 				.xor(cmd_ops.get(Opcode.CARRY)).xor(cmd_ops.get(Opcode.CMP))
 				.xor(cmd_ops.get(Opcode.STORE));
 
@@ -169,6 +172,7 @@ public class CPU implements Engine {
 		target_new = cmd_ops.get(Opcode.LOAD).and(source_arg);
 		target_new = target_new.xor(cmd_ops.get(Opcode.ROR).and(b_ror));
 		target_new = target_new.xor(cmd_ops.get(Opcode.ROL).and(b_rol));
+		target_new = target_new.xor(cmd_ops.get(Opcode.NOT).and(b_not));
 		target_new = target_new.xor(cmd_ops.get(Opcode.ADD).and(b_add));
 		target_new = target_new.xor(cmd_ops.get(Opcode.SUB).and(b_cmp_sub));
 		target_new = target_new.xor(cmd_ops.get(Opcode.AND).and(
@@ -180,10 +184,10 @@ public class CPU implements Engine {
 		target_new = target_new.xor(cmd_ops.get(Opcode.LOOP).and(b_loop));
 
 		r0(memory,
-				src_unchanged.ifThen(r0(memory),
+				target_unchanged.ifThen(r0(memory),
 						cmd_target.bit(0).ifThen(r0(memory), target_new)));
 		r1(memory,
-				src_unchanged.ifThen(r1(memory),
+				target_unchanged.ifThen(r1(memory),
 						cmd_target.bit(0).ifThen(target_new, r1(memory))));
 
 		alu_zero = cmd_ops.get(Opcode.CMP).xor(cmd_ops.get(Opcode.SUB))
@@ -204,7 +208,6 @@ public class CPU implements Engine {
 		state.debug("carry:", alu_carry, "minus:", alu_minus, "zero:", alu_zero);
 
 		// Update PC
-		// TODO: LFSR
 		Word pc_linear = pc.add(state.one());
 
 		Bit bra00 = alu_minus;
