@@ -212,4 +212,29 @@ public class WordTest {
 		Word compare1 = a.not().add(one).add(b);
 		assertEquals(0, factory.extract(compare1));
 	}
+
+	@Test
+	public void decode() {
+		Word a00 = factory.encodeWord(0b00000000, 8);
+		Word a01 = factory.encodeWord(0b11111111, 8);
+		Word a10 = factory.encodeWord(0b11110000, 8);
+		Word a11 = factory.encodeWord(0b00001111, 8);
+
+		assertEquals(
+				factory.extract(a00),
+				factory.extract(factory.encodeWord(0b00, 2).decode(a00, a01,
+						a10, a11)));
+		assertEquals(
+				factory.extract(a01),
+				factory.extract(factory.encodeWord(0b01, 2).decode(a00, a01,
+						a10, a11)));
+		assertEquals(
+				factory.extract(a10),
+				factory.extract(factory.encodeWord(0b10, 2).decode(a00, a01,
+						a10, a11)));
+		assertEquals(
+				factory.extract(a11),
+				factory.extract(factory.encodeWord(0b11, 2).decode(a00, a01,
+						a10, a11)));
+	}
 }

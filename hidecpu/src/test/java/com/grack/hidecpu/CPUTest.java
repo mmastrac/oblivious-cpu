@@ -1,5 +1,7 @@
 package com.grack.hidecpu;
 
+import static org.junit.Assert.fail;
+
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -14,6 +16,7 @@ import org.junit.Test;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.grack.hidecpu.assembler.Compiler;
+import com.grack.hidecpu.assembler.Opcode;
 import com.grack.hidecpu.assembler.Parser;
 import com.grack.hidecpu.assembler.Program;
 import com.grack.homomorphic.graph.Graph;
@@ -34,7 +37,7 @@ public class CPUTest {
 				.getResource("/creditcard.asm"), Charsets.UTF_8));
 		Program program = parser.parse();
 
-		System.out.println(program);
+		// System.out.println(program);
 
 		Compiler compiler = new Compiler();
 		compiler.compile(program);
@@ -52,17 +55,21 @@ public class CPUTest {
 		State state = stateFactory.createState();
 		cpu.initialize(factory, stateFactory);
 		long lastPc = -1;
-		for (int i = 0; i < 300; i++) {
+		for (int i = 0; i < 10000; i++) {
 			cpu.tick(state);
 			long pc = factory.extract(state.getWordRegister("pc"));
-			if (pc == lastPc)
-				break;
+			if (pc == lastPc) {
+				dumpMemory(factory, state);
+
+				System.out.println("XOR count = " + factory.getXorCount());
+				System.out.println("AND count = " + factory.getAndCount());
+				return;
+			}
+			
+			lastPc = pc;
 		}
 
-		dumpMemory(factory, state);
-
-		System.out.println("XOR count = " + factory.getXorCount());
-		System.out.println("AND count = " + factory.getAndCount());
+		fail();
 	}
 
 	@Test
@@ -87,8 +94,10 @@ public class CPUTest {
 		Word[] memory = state.getWordArrayRegister("memory");
 		for (int j = 0; j < memory.length; j++) {
 			long mem = factory.extract(memory[j]) & 0xff;
-			System.out.println(String.format("%3d: %s %5d", j,
-					memory[j].toString(), mem));
+			if (factory.extract(memory[j].bits(14, 11)) == Opcode.DATA
+					.ordinal())
+				System.out.println(String.format("%3d: %s %5d", j,
+						memory[j].toString(), mem));
 		}
 	}
 }

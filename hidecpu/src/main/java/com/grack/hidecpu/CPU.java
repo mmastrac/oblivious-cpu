@@ -18,9 +18,9 @@ public class CPU implements Engine {
 	private static final String ALU_MINUS = "alu_minus";
 	private static final String ALU_ZERO = "alu_zero";
 	private static final String PC = "pc";
-	private static final String R0 = "r0";
-	private static final String R1 = "r1";
 	private static final String MEMORY = "memory";
+	private static final int R0 = 254;
+	private static final int R1 = 255;
 
 	private static final int MEMORY_WIDTH = 15;
 
@@ -34,8 +34,6 @@ public class CPU implements Engine {
 		stateFactory.allocateBitRegister(ALU_ZERO);
 
 		stateFactory.allocateWordRegister(PC, 8);
-		stateFactory.allocateWordRegister(R0, 8);
-		stateFactory.allocateWordRegister(R1, 8);
 
 		stateFactory.allocateWordArrayRegister(MEMORY, MEMORY_WIDTH, 256);
 	}
@@ -80,8 +78,6 @@ public class CPU implements Engine {
 
 	public void tick(State state) {
 		Word pc = state.getWordRegister(PC);
-		Word r0 = state.getWordRegister(R0);
-		Word r1 = state.getWordRegister(R1);
 		Bit alu_carry = state.getBitRegister(ALU_CARRY);
 		Bit alu_minus = state.getBitRegister(ALU_MINUS);
 		Bit alu_zero = state.getBitRegister(ALU_ZERO);
@@ -90,8 +86,8 @@ public class CPU implements Engine {
 		state.debug("***** tick *****");
 
 		state.debug("pc =", pc);
-		state.debug("r0 =", r0);
-		state.debug("r1 =", r1);
+		state.debug("r0 =", r0(memory));
+		state.debug("r1 =", r1(memory));
 
 		Word cmd = memoryRead(state, memory, pc, MEMORY_WIDTH);
 		Word cmd_param = cmd.bits(7, 0);
@@ -103,21 +99,20 @@ public class CPU implements Engine {
 		// Load arg is a constant, a constant read or a register-relative read
 		Word addr00 = pc;
 		Word addr01 = cmd_param;
-		Word addr10 = r0.add(cmd_param);
-		Word addr11 = r1.add(cmd_param);
+		Word addr10 = r0(memory).add(cmd_param);
+		Word addr11 = r1(memory).add(cmd_param);
 
 		state.debug("cmd:", cmd);
 		state.debug("cmd_param:", cmd_param, "cmd_source:", cmd_source,
 				"cmd_target:", cmd_target);
 
-		Word source_arg = memoryRead(state, memory, cmd_source.bit(1).ifThen(
-				cmd_source.bit(0).ifThen(addr11, addr10),
-				cmd_source.bit(0).ifThen(addr01, addr00)), 8);
+		Word source_arg = memoryRead(state, memory,
+				cmd_source.decode(addr00, addr01, addr10, addr11), 8);
 
 		state.debug("addr00:", addr00, "addr01:", addr01, "addr10:", addr10,
 				"addr11:", addr11);
 
-		Word target_arg = cmd_target.bit(0).ifThen(r1, r0);
+		Word target_arg = cmd_target.bit(0).ifThen(r1(memory), r0(memory));
 
 		state.debug("source_arg:", source_arg, "target_arg:", target_arg);
 
@@ -162,15 +157,13 @@ public class CPU implements Engine {
 		Bit loop_zero = target_arg.eq(0);
 
 		// Write-back
-		Word addr = cmd_source.bit(1).ifThen(
-				cmd_source.bit(0).ifThen(addr11, addr10),
-				cmd_source.bit(0).ifThen(addr01, addr01)); // addr00 unused --
-															// can we repurpose
-															// this?
+		// addr00 unused -- can we re-purpose this?
+		Word addr = cmd_source.decode(addr01, addr01, addr10, addr11);
+
 		memoryAccess(state, memory, addr, target_arg, cmd_ops.get(Opcode.STORE));
 
 		Bit src_unchanged = cmd_ops.get(Opcode.BRA)
-				.xor(cmd_ops.get(Opcode.STF)).xor(cmd_ops.get(Opcode.CMP))
+				.xor(cmd_ops.get(Opcode.CARRY)).xor(cmd_ops.get(Opcode.CMP))
 				.xor(cmd_ops.get(Opcode.STORE));
 
 		// Update target_arg
@@ -188,22 +181,28 @@ public class CPU implements Engine {
 				source_arg.or(cmd_param)));
 		target_new = target_new.xor(cmd_ops.get(Opcode.LOOP).and(b_loop));
 
-		r0 = src_unchanged.ifThen(r0, cmd_target.bit(0).ifThen(r0, target_new));
-		r1 = src_unchanged.ifThen(r1, cmd_target.bit(0).ifThen(target_new, r1));
+		r0(memory,
+				src_unchanged.ifThen(r0(memory),
+						cmd_target.bit(0).ifThen(r0(memory), target_new)));
+		r1(memory,
+				src_unchanged.ifThen(r1(memory),
+						cmd_target.bit(0).ifThen(target_new, r1(memory))));
 
 		alu_zero = cmd_ops.get(Opcode.CMP).xor(cmd_ops.get(Opcode.SUB))
 				.ifThen(b_cmp_sub.eq(0), alu_zero);
 
 		alu_minus = cmd_ops.get(Opcode.CMP).xor(cmd_ops.get(Opcode.SUB))
 				.ifThen(b_cmp_sub.bit(7), alu_minus);
-		//
-		// alu_carry = cmd_add.ifThen(
-		// carry_add,
-		// cmd_rol.ifThen(carry_rol, cmd_ror.ifThen(
-		// carry_ror,
-		// cmd_clc.ifThen(state.zero(),
-		// cmd_sec.ifThen(state.one(), alu_carry)))));
-		//
+
+		alu_carry = cmd_ops.get(Opcode.ADD).ifThen(
+				carry_add,
+				cmd_ops.get(Opcode.ROL).ifThen(
+						carry_rol,
+						cmd_ops.get(Opcode.ROR).ifThen(
+								carry_ror,
+								cmd_ops.get(Opcode.CARRY).ifThen(
+										source_arg.bit(0), alu_carry))));
+
 		state.debug("carry:", alu_carry, "minus:", alu_minus, "zero:", alu_zero);
 
 		// Update PC
@@ -219,9 +218,7 @@ public class CPU implements Engine {
 				"eq:", bra10, "ca:", bra11);
 
 		Bit bra_success = branch_type.bit(0).xor(
-				branch_type.bit(1).ifThen(
-						branch_type.bit(2).ifThen(bra11, bra10),
-						branch_type.bit(2).ifThen(bra01, bra00)));
+				branch_type.bits(2, 1).decode(bra00, bra01, bra10, bra11));
 
 		pc = cmd_ops.get(Opcode.BRA).ifThen(
 				bra_success.ifThen(source_arg, pc_linear),
@@ -231,15 +228,29 @@ public class CPU implements Engine {
 								loop_zero.ifThen(pc_linear, source_arg),
 								pc_linear)));
 
-		state.debug("pc:", pc, "r0:", r0, "r1:", r1);
+		state.debug("pc:", pc, "r0:", r0(memory), "r1:", r1(memory));
 
 		// Update CPU state
 		state.setBitRegister(ALU_CARRY, alu_carry);
 		state.setBitRegister(ALU_MINUS, alu_minus);
 		state.setBitRegister(ALU_ZERO, alu_zero);
-		state.setWordRegister(R0, r0);
-		state.setWordRegister(R1, r1);
 		state.setWordRegister(PC, pc);
 		state.setWordArrayRegister(MEMORY, memory);
+	}
+
+	private void r0(Word[] memory, Word value) {
+		memory[R0] = memory[R0].setBits(7, 0, value);
+	}
+
+	private void r1(Word[] memory, Word value) {
+		memory[R1] = memory[R1].setBits(7, 0, value);
+	}
+
+	private Word r0(Word[] memory) {
+		return memory[R0].bits(7, 0);
+	}
+
+	private Word r1(Word[] memory) {
+		return memory[R1].bits(7, 0);
 	}
 }

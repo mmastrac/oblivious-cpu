@@ -17,8 +17,10 @@ public enum Opcode {
 	OR,
 	
 	CMP,
-	STF,
+	CARRY,
 	BRA,
 	LOOP,
-	JUMP
+	JUMP,
+	
+	DATA
 }

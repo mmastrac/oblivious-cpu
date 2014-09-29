@@ -12,6 +12,7 @@ import org.docopt.Docopt;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.grack.hidecpu.assembler.Compiler;
+import com.grack.hidecpu.assembler.Opcode;
 import com.grack.hidecpu.assembler.Parser;
 import com.grack.hidecpu.assembler.Program;
 import com.grack.homomorphic.light.LightBitFactory;
@@ -26,7 +27,7 @@ public class Main {
 				Charsets.US_ASCII).withExit(true).withHelp(true).parse(args);
 
 		if ((Boolean) parsed.get("run")) {
-			int ticks = parsed.get("--ticks") == null ? 1000 : Integer
+			int ticks = parsed.get("--ticks") == null ? -1 : Integer
 					.parseInt((String) parsed.get("--ticks"));
 			run((String) parsed.get("<asm-or-obj-file>"), ticks,
 					(Boolean) parsed.get("--debug"));
@@ -53,7 +54,11 @@ public class Main {
 
 	private static void run(String file, int ticks, boolean debug)
 			throws IOException {
-		System.err.println("Running " + file + " for " + ticks + " tick(s)");
+		if (ticks == -1)
+			System.err.println("Running " + file + " until complete");
+		else
+			System.err.println("Running " + file + " for " + ticks + " tick(s)");
+		
 		Map<String, Object> initialState = new HashMap<>();
 
 		if (file.endsWith(".asm")) {
@@ -80,15 +85,26 @@ public class Main {
 
 		State state = stateFactory.createState();
 
-		for (int i = 0; i < ticks; i++) {
+		int actualTicks = 0;
+		long lastPc = -1;
+		for (int i = 0; ticks == -1 ? true : i < ticks; i++) {
+			actualTicks++;
 			cpu.tick(state);
+			long pc = factory.extract(state.getWordRegister("pc"));
+			if (ticks == -1 && pc == lastPc) {
+				System.err.println("Complete after " + actualTicks + " tick(s)");
+				break;
+			}
+			lastPc = pc;
 		}
 
 		Word[] memory = state.getWordArrayRegister("memory");
 		for (int i = 0; i < memory.length; i++) {
-			Word mem = memory[i].and(factory.encodeWord(0xff, 8));
-			System.err.println(String.format("%08x: %s  %s", i, mem,
-					factory.extract(mem)));
+			if (factory.extract(memory[i].bits(14, 11)) == Opcode.DATA.ordinal()) {
+				Word mem = memory[i].and(factory.encodeWord(0xff, 8));
+				System.err.println(String.format("%08x: %s  %s", i, mem,
+						factory.extract(mem)));
+			}
 		}
 
 		System.err.println("XOR count = " + factory.getXorCount());

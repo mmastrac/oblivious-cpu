@@ -200,15 +200,6 @@ public class Word {
 		return bits.length;
 	}
 
-	@Override
-	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		for (int i = 0; i < bits.length; i++) {
-			builder.append(bit(bits.length - i - 1));
-		}
-		return builder.toString();
-	}
-
 	public Word reverse() {
 		Bit[] bits = new Bit[size()];
 		for (int i = 0; i < bits.length; i++) {
@@ -216,5 +207,56 @@ public class Word {
 		}
 
 		return new Word(bits);
+	}
+
+	/**
+	 * Decodes the bits in this word into an array of words using
+	 * {@link Bit#ifThen(Word, Word)} calls.
+	 */
+	public Word decode(Word... args) {
+		int n = 1 << size();
+		if (n != args.length)
+			throw new IllegalArgumentException("Expected " + n + " argument(s) for decode");
+		
+		return decode(args, 0, size() - 1);
+	}
+	
+	private Word decode(Word[] args, int start, int bit) {
+		if (bit == 0) {
+			return bit(0).ifThen(args[start + 1], args[start]);
+		}
+		
+		return bit(bit).ifThen(decode(args, start + (1 << bit), bit - 1),
+				decode(args, start, bit - 1));
+	}
+
+	/**
+	 * Decodes the bits in this word into an array of words using
+	 * {@link Bit#ifThen(Bit, Bit)} calls.
+	 */
+	public Bit decode(Bit... args) {
+		int n = 1 << size();
+		if (n != args.length)
+			throw new IllegalArgumentException("Expected " + n + " argument(s) for decode");
+		
+		return decode(args, 0, size() - 1);
+	}
+	
+	private Bit decode(Bit[] args, int start, int bit) {
+		if (bit == 0) {
+			return bit(0).ifThen(args[start + 1], args[start]);
+		}
+		
+		return bit(bit).ifThen(decode(args, start + (1 << bit), bit - 1),
+				decode(args, start, bit - 1));
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		for (int i = 0; i < bits.length; i++) {
+			builder.append(bit(bits.length - i - 1));
+		}
+		return builder.toString();
 	}
 }

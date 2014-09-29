@@ -65,9 +65,9 @@ public class StandardStateFactory implements StateFactory {
 			if (value instanceof int[]) {
 				int[] values = (int[]) value;
 
-				Word[] words = new Word[values.length];
-				for (int i = 0; i < values.length; i++) {
-					words[i] = bitFactory.encodeWord(values[i], width);
+				Word[] words = new Word[size];
+				for (int i = 0; i < size; i++) {
+					words[i] = bitFactory.encodeWord(i > values.length - 1 ? 0 : values[i], width);
 				}
 				wordArrays.put(name, words);
 			} else {

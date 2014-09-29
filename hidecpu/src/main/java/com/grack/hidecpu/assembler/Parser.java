@@ -8,7 +8,6 @@ import java.util.List;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
 import com.google.common.io.CharSource;
 
 public class Parser {
@@ -102,7 +101,12 @@ public class Parser {
 			value = parseSourceValue(params);
 			break;
 		case "clc":
-			op = Opcode.STF;
+			op = Opcode.CARRY;
+			value = new Value(0);
+			break;
+		case "sec":
+			op = Opcode.CARRY;
+			value = new Value(1);
 			break;
 		case "blt":
 		case "blte":
@@ -189,9 +193,5 @@ public class Parser {
 			return new Value(Integer.parseInt(value));
 
 		return new Value(value);
-	}
-
-	private Opcode parseOpcode(String opcode) {
-		return Opcode.valueOf(opcode);
 	}
 }

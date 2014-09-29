@@ -41,7 +41,7 @@ public class Line {
 	}
 
 	public Line(Value value) {
-		this.opcode = Opcode.LOAD;
+		this.opcode = Opcode.DATA;
 		this.source = OpSource.CONSTANT;
 		this.target = OpTarget.R0;
 		this.value = value;
@@ -49,7 +49,7 @@ public class Line {
 
 	public Line(String label, Value value) {
 		this.label = label;
-		this.opcode = Opcode.LOAD;
+		this.opcode = Opcode.DATA;
 		this.source = OpSource.CONSTANT;
 		this.target = OpTarget.R0;
 		this.value = value;
@@ -155,10 +155,14 @@ public class Line {
 						+ value.toString();
 				break;
 			case JUMP:
+			case DATA:
 				s += opcode.name().toLowerCase() + "\t" + src;
 				break;
-			case STF:
-				s += opcode.name().toLowerCase() + "\t" + src;
+			case CARRY:
+				if ((int)value.getValue() == 0)
+					s += "clc";
+				else
+					s += "sec";
 				break;
 			default:
 				s += opcode.name().toLowerCase() + "\t"
