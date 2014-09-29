@@ -23,10 +23,23 @@ To run:
     # Run the credit-card check digit test
     bin/shapecpu.sh run shapecpu/samples/creditcard.asm
 
-TODO:
+Implementation Notes
+====================
+
+This project uses a register transfer language built in Java to execute a CPU in either an immediate or a "recording" mode that can be used to construct a graph of XOR, AND and NOT operators. 
+This approach allows us to optimize the CPU offline, removing redundant operations and reducing the overall gate count of the CPU. The graph can also be exported to a form that can be executed 
+in an alternate FHE environment (C, etc) rather that in the Java environment provided.
+
+
+TODO
+====
 
   * Proper documentation
   * An implementation of C. Gentry's fully homomorphic system (perhaps through libScarab)
+
+
+Links
+=====
 
 The original version of ShapeCPU is here: https://hcrypt.com/shape-cpu/
 
