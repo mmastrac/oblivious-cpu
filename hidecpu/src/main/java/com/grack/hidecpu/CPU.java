@@ -85,9 +85,7 @@ public class CPU implements Engine {
 
 		state.debug("***** tick *****");
 
-		state.debug("pc =", pc);
-		state.debug("r0 =", r0(memory));
-		state.debug("r1 =", r1(memory));
+		state.debug("pc:", pc, "r0:", r0(memory), "r1:", r1(memory));
 
 		Word cmd = memoryRead(state, memory, pc, MEMORY_WIDTH);
 		Word cmd_param = cmd.bits(7, 0);
