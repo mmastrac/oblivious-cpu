@@ -12,10 +12,25 @@ public class Line {
 		this.label = label;
 	}
 
+	public Line(String label, Opcode opcode, OpSource source, OpTarget target, Value value) {
+		this.label = label;
+		this.opcode = opcode;
+		this.source = source;
+		this.target = target;
+		this.value = value;
+	}
+
 	public Line(Opcode opcode, OpSource source, OpTarget target, Value value) {
 		this.opcode = opcode;
 		this.source = source;
 		this.target = target;
+		this.value = value;
+	}
+
+	public Line(String label, Opcode opcode, BranchType branchType, Value value) {
+		this.label = label;
+		this.opcode = opcode;
+		this.branchType = branchType;
 		this.value = value;
 	}
 
@@ -26,6 +41,14 @@ public class Line {
 	}
 
 	public Line(Value value) {
+		this.opcode = Opcode.LOAD;
+		this.source = OpSource.CONSTANT;
+		this.target = OpTarget.R0;
+		this.value = value;
+	}
+
+	public Line(String label, Value value) {
+		this.label = label;
 		this.opcode = Opcode.LOAD;
 		this.source = OpSource.CONSTANT;
 		this.target = OpTarget.R0;
@@ -90,11 +113,10 @@ public class Line {
 
 		String s = label == null ? "" : label + ":";
 		if (opcode != null) {
-			if (line != -1)
-				s += line;
-			
 			if (label != null)
 				s += '\n';
+			if (line != -1)
+				s += line;
 			s += '\t';
 
 			String src = "<null>";
