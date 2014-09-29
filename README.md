@@ -30,6 +30,22 @@ This project uses a register transfer language built in Java to execute a CPU in
 This approach allows us to optimize the CPU offline, removing redundant operations and reducing the overall gate count of the CPU. The graph can also be exported to a form that can be executed 
 in an alternate FHE environment (C, etc) rather that in the Java environment provided.
 
+Optimizations
+=============
+
+The graph optimizer currently optimizes the following patterns:
+
+  * Unused nodes with no outputs (trimmed)
+  * Greedy common-subexpression extraction
+  * Constant folding (x XOR constant, x AND constant)
+
+The graph optimizer does not optimize the following (yet):
+
+  * !!a -> a
+  * (!a XOR !b) -> (a XOR b)
+  * (a XOR a XOR b) -> b
+  * (a XOR b) AND !(b XOR c) -> (a XOR b) AND (a XOR c)
+  * (a AND b) XOR (a AND c) -> a AND (b XOR c)
 
 TODO
 ====
