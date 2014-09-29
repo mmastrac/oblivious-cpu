@@ -101,18 +101,6 @@ public class CPU implements Engine {
 		Word addr11 = r1(memory).add(cmd_param);
 
 		state.debug("cmd:", cmd);
-		state.debug("cmd_param:", cmd_param, "cmd_source:", cmd_source,
-				"cmd_target:", cmd_target);
-
-		Word source_arg = memoryRead(state, memory,
-				cmd_source.decode(addr00, addr01, addr10, addr11), 8);
-
-		state.debug("addr00:", addr00, "addr01:", addr01, "addr10:", addr10,
-				"addr11:", addr11);
-
-		Word target_arg = cmd_target.bit(0).ifThen(r1(memory), r0(memory));
-
-		state.debug("source_arg:", source_arg, "target_arg:", target_arg);
 
 		// Decode using opcode enum
 		Map<Opcode, Bit> cmd_ops = new HashMap<>();
@@ -126,6 +114,22 @@ public class CPU implements Engine {
 		}
 
 		state.debug(op_debug.toArray());
+		state.debug("cmd_param:", cmd_param, "cmd_source:", cmd_source,
+				"cmd_target:", cmd_target, "branch_type:", branch_type);
+
+		Word source_arg = memoryRead(
+				state,
+				memory,
+				// Override cmd_source for BRA
+				cmd_ops.get(Opcode.BRA).ifThen(addr00,
+						cmd_source.decode(addr00, addr01, addr10, addr11)), 8);
+
+		state.debug("addr00:", addr00, "addr01:", addr01, "addr10:", addr10,
+				"addr11:", addr11);
+
+		Word target_arg = cmd_target.bit(0).ifThen(r1(memory), r0(memory));
+
+		state.debug("source_arg:", source_arg, "target_arg:", target_arg);
 
 		// CMP/SUB (two's compliment, then add)
 		Word b_cmp_sub = source_arg.not().add(state.one()).add(target_arg);
@@ -163,9 +167,9 @@ public class CPU implements Engine {
 
 		memoryAccess(state, memory, addr, target_arg, cmd_ops.get(Opcode.STORE));
 
-		Bit target_unchanged = cmd_ops.get(Opcode.BRA).xor(cmd_ops.get(Opcode.JUMP))
-				.xor(cmd_ops.get(Opcode.CARRY)).xor(cmd_ops.get(Opcode.CMP))
-				.xor(cmd_ops.get(Opcode.STORE));
+		Bit target_unchanged = cmd_ops.get(Opcode.BRA)
+				.xor(cmd_ops.get(Opcode.JUMP)).xor(cmd_ops.get(Opcode.CARRY))
+				.xor(cmd_ops.get(Opcode.CMP)).xor(cmd_ops.get(Opcode.STORE));
 
 		// Update target_arg
 		Word target_new;
@@ -215,11 +219,12 @@ public class CPU implements Engine {
 		Bit bra10 = alu_zero;
 		Bit bra11 = alu_carry;
 
-		state.debug("!", branch_type.bit(0), "lt:", bra00, "lte:", bra01,
-				"eq:", bra10, "ca:", bra11);
+		Bit bra_success = branch_type.bit(2).xor(
+				branch_type.bits(1, 0).decode(bra00, bra01, bra10, bra11));
 
-		Bit bra_success = branch_type.bit(0).xor(
-				branch_type.bits(2, 1).decode(bra00, bra01, bra10, bra11));
+		state.debug("bra?", bra_success, "!", branch_type.bit(2), "sel:",
+				branch_type.bits(1, 0), "lt:", bra00, "lte:", bra01, "eq:",
+				bra10, "ca:", bra11);
 
 		pc = cmd_ops.get(Opcode.BRA).ifThen(
 				bra_success.ifThen(source_arg, pc_linear),

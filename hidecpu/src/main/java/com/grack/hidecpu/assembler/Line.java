@@ -94,6 +94,7 @@ public class Line {
 	public int assemble() {
 		int asm = 0;
 		asm |= opcode.ordinal() << 11;
+		asm |= (branchType == null) ? 0 : (branchType.ordinal() << 8);
 		asm |= (target == null) ? 0 : (target.ordinal() << 10);
 		asm |= (source == null) ? 0 : (source.ordinal() << 8);
 		asm |= (int) (value == null ? 0 : value.getValue());

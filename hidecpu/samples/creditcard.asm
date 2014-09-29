@@ -14,7 +14,7 @@ no_sub:
 # sum all the digits
 	clc
 	mov r1, 0
-	mov r0, 16
+	mov r0, 15
 adder:
 	add r1, [data + r0]
 	loop r0, adder 

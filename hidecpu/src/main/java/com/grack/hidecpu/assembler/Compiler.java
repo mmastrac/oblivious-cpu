@@ -14,17 +14,18 @@ public class Compiler {
 		// Remove all the empty lines
 		lines.removeIf((line) -> line.isEmpty());
 
-		// Move labels to a real line
+		// Move labels to a real line (assuming no label on the next line)
 		for (int i = 0; i < lines.size(); i++) {
 			Line line = lines.get(i);
 			String label = line.getLabel();
-			if (label != null && line.getOpcode() == null) {
+			if (label != null && line.getOpcode() == null
+					&& lines.get(i + 1).getLabel() == null) {
 				lines.remove(i);
 				lines.get(i).setLabel(label);
 				i--;
 			}
 		}
-		
+
 		Map<String, Integer> indexes = new HashMap<>();
 
 		// Process indexes
@@ -37,18 +38,21 @@ public class Compiler {
 			lineNumber++;
 		}
 
-		lines.forEach(
-				(line) -> updateValue(indexes, line.getValue()));
+		for (int i = 0; i < lines.size(); i++) {
+			indexes.put("pc", i);
+			updateValue(indexes, lines.get(i).getValue());
+		}
 	}
 
 	private void updateValue(Map<String, Integer> indexes, Value value) {
 		if (value == null)
 			return;
-		
+
 		if (value.getValue() instanceof String) {
 			Integer index = indexes.get(value.getValue());
 			if (index == null)
-				throw new IllegalStateException("Index not found: " + value.getValue());
+				throw new IllegalStateException("Index not found: "
+						+ value.getValue());
 			value.setValue(index);
 		}
 	}
