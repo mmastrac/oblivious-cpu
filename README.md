@@ -30,6 +30,6 @@ TODO:
 
 The original version of ShapeCPU is here: https://hcrypt.com/shape-cpu/
 
-License: LGPL
+License: Apache v2.0 [license](http://www.apache.org/licenses/LICENSE-2.0.html)
 
 Note that some of the ShapeCPU samples may be under the ShapeCPU license.

@@ -1,3 +1,4 @@
+# Bubble sort
 start:
 	mov r0, 0
 	mov [swapcount], r0
@@ -5,6 +6,7 @@ start:
 	mov r1, [len]
 	sub r1, 2
 loop:
+	# Ditch the current count into memory for now since we need the register
 	mov [counttmp], r1
 
 	mov r1, [r0]      # r1<-a
@@ -26,6 +28,8 @@ noswap:
 	add r0, 1
 	loop r1, loop
 	mov r1, [swapcount]
+	# Can use this instead of cmp/bne since it'll work the same way
+#	loop r1, start
 	cmp r1, 0
 	bne start
 
@@ -44,8 +48,8 @@ swapcount:
 marker1:
 	data 99
 len:
-	data 6
+	data 5
 marker2:
 	data 99
 list:
-	data 66, 55, 44, 55, 88, 11
+	data 6, 5, 4, 9, 5
