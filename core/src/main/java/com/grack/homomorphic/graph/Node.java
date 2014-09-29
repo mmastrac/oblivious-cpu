@@ -91,12 +91,29 @@ public abstract class Node {
 		return out;
 	}
 
+	public int outputCount() {
+		return out.size();
+	}
+
 	public Node input(int n) {
 		return in.get(n);
 	}
 
 	public Iterable<Node> inputs() {
 		return in;
+	}
+
+	public int inputCount() {
+		return in.size();
+	}
+
+	public void remove() {
+		if (this.out.size() > 0)
+			throw new IllegalStateException("Can't remove a node with outputs");
+		
+		for (Node node : in) {
+			node.removeOutput(this);
+		}
 	}
 
 	/**

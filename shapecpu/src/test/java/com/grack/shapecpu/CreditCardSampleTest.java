@@ -131,9 +131,6 @@ public class CreditCardSampleTest {
 		for (int i = 0; i < 300; i++) {
 			cpu.tick(state);
 		}
-
-		System.out.println("XOR count = " + factory.getXorCount());
-		System.out.println("AND count = " + factory.getAndCount());
 	}
 
 	@Test
@@ -152,6 +149,8 @@ public class CreditCardSampleTest {
 				System.out.println("Total ticks: " + i);
 				dumpMemory(factory, state);
 				System.out.println("All memory locations match.");
+				System.out.println("XOR count = " + factory.getXorCount());
+				System.out.println("AND count = " + factory.getAndCount());
 				return;
 			}
 			lastPC = pc;

@@ -1,9 +1,15 @@
 package com.grack.hidecpu;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.grack.hidecpu.assembler.BranchType;
@@ -14,15 +20,20 @@ import com.grack.hidecpu.assembler.OpTarget;
 import com.grack.hidecpu.assembler.Opcode;
 import com.grack.hidecpu.assembler.Program;
 import com.grack.hidecpu.assembler.Value;
+import com.grack.homomorphic.graph.Graph;
 import com.grack.homomorphic.light.LightBitFactory;
 import com.grack.homomorphic.light.StandardStateFactory;
+import com.grack.homomorphic.logging.LoggingBitFactory;
+import com.grack.homomorphic.logging.LoggingStateFactory;
 import com.grack.homomorphic.ops.State;
 import com.grack.homomorphic.ops.StateFactory;
 import com.grack.homomorphic.ops.Word;
 
 public class CPUTest {
-	@Test
-	public void test() {
+	private Map<String, Object> initialState;
+
+	@Before
+	public void setup() {
 		Program program = new Program();
 
 		List<Line> lines = program.getLines();
@@ -85,15 +96,19 @@ public class CPUTest {
 			lines.add(new Line(new Value(i)));
 		}
 		
-		System.out.println(program);
+//		System.out.println(program);
 
 		Compiler compiler = new Compiler();
 		compiler.compile(program);
-		
+
+		initialState = new HashMap<>();
+		initialState.put("memory", program.getProgram());
+	}
+	
+	@Test
+	public void runUntilDone() {
 		CPU cpu = new CPU();
 		LightBitFactory factory = new LightBitFactory();
-		Map<String, Object> initialState = new HashMap<>();
-		initialState.put("memory", program.getProgram());
 		StateFactory stateFactory = new StandardStateFactory(factory, initialState, true);
 		State state = stateFactory.createState();
 		cpu.initialize(factory, stateFactory);
@@ -106,8 +121,32 @@ public class CPUTest {
 		}
 
 		dumpMemory(factory, state);
+		
+		System.out.println("XOR count = " + factory.getXorCount());
+		System.out.println("AND count = " + factory.getAndCount());
 	}
 
+	@Test
+	public void cpuLogging() throws FileNotFoundException, IOException {
+		LoggingBitFactory factory = new LoggingBitFactory();
+		LoggingStateFactory stateFactory = new LoggingStateFactory(factory);
+		CPU cpu = new CPU();
+		cpu.initialize(factory, stateFactory);
+		State state = stateFactory.createState();
+		cpu.tick(state);
+
+		// Bit bit = state.getBitRegister("alu_carry");
+		// System.out.println(((LoggingBit) bit.nativeBit()).describe());
+
+		Graph graph = factory.toGraph();
+		graph.optimize();
+
+		try (Writer w = new OutputStreamWriter(new FileOutputStream(
+				"/tmp/output.txt"))) {
+			graph.toC(w);
+		}
+	}
+	
 	private void dumpMemory(LightBitFactory factory, State state) {
 		Word[] memory = state.getWordArrayRegister("memory");
 		for (int j = 0; j < memory.length; j++) {

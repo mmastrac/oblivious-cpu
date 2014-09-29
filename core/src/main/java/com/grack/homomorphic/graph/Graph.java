@@ -5,6 +5,8 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,25 +41,96 @@ public class Graph {
 	}
 
 	public int nodeCount() {
-		HashSet<Node> nodes = new HashSet<>();
+		Set<Node> nodesIn = new HashSet<>();
 		visitIn((node) -> {
-			return nodes.add(node);
+			return nodesIn.add(node);
 		}, null);
-		return nodes.size();
+		Set<Node> nodesOut = new HashSet<>();
+		visitOut((node) -> {
+			return nodesOut.add(node);
+		}, null);
+
+		nodesIn.addAll(nodesOut);
+		return nodesIn.size();
 	}
 
 	public void optimize() {
 		int before = nodeCount();
 
-		// phase 1: fold constants
+		// phase 1: remove nodes with no output
+		removeDeadEndNodes();
+
+		// phase 2: fold constants
 		foldConstants();
 
-		// phase 2: remove duplicate paths
+		// phase 3: remove duplicate paths
 		removeDuplicatePaths();
+
+		Set<Node> visited = new HashSet<>();
+		visitIn((node) -> {
+			if (!visited.add(node))
+				return false;
+
+			if (node instanceof XorNode) {
+				if (node.input(0) instanceof NotNode
+						&& node.input(1) instanceof NotNode) {
+					System.out.println(node);
+				}
+			}
+
+			if (node instanceof AndNode || node instanceof XorNode) {
+				if (node.input(0) == node.input(1)) {
+					System.out.println(node);
+				}
+			}
+
+			if (node instanceof NotNode) {
+				if (node.input(0) instanceof NotNode) {
+					System.out.println(node);
+				}
+			}
+			return true;
+		}, null);
 
 		int after = nodeCount();
 
 		System.out.println(before + " -> " + after);
+	}
+
+	private void removeDeadEndNodes() {
+		Set<Node> reachable = new HashSet<>();
+		visitIn((node) -> {
+			return reachable.add(node);
+		}, null);
+
+		Set<Node> visited = new HashSet<>();
+		Set<Node> toRemove = new LinkedHashSet<>();
+		visitOut((node) -> {
+			// Already been here
+				if (!visited.add(node)) {
+					return false;
+				}
+
+				if (reachable.contains(node)) {
+					return true;
+				}
+
+				toRemove.add(node);
+				return true;
+			}, null);
+
+		// Do this repeatedly -- it's fast enough and we don't have to figure
+		// out the safe order to unwind them
+		while (toRemove.size() > 0) {
+			Iterator<Node> it = toRemove.iterator();
+			while (it.hasNext()) {
+				Node n = it.next();
+				if (n.outputCount() == 0) {
+					n.remove();
+					it.remove();
+				}
+			}
+		}
 	}
 
 	private void foldConstants() {
@@ -88,21 +161,24 @@ public class Graph {
 							}
 						} else if (output instanceof AndNode) {
 							if (value == 0) {
-								// AND 0 means zero (we will re-attach the zero higher up the tree)
+								// AND 0 means zero (we will re-attach the zero
+								// higher up the tree)
 								output.replaceWith(constant);
 							} else {
 								// AND 1 means no-op
 								output.replaceWith(otherInput);
 							}
 						} else {
-							throw new IllegalStateException("Unable to fold constant into " + output.getClass());
+							throw new IllegalStateException(
+									"Unable to fold constant into "
+											+ output.getClass());
 						}
 
 						continue top;
 					}
 				}
 			}
-			
+
 			// No modifications
 			break;
 		}
@@ -182,6 +258,39 @@ public class Graph {
 		});
 	}
 
+	public void toGraphviz(Writer w) throws IOException {
+		w.write("digraph G {\n");
+
+		Map<Node, Integer> nodes = gatherNodes();
+
+		// Recursively write
+		w.write("subgraph input {\n");
+		w.write("  rank = source;\n");
+		toGraphviz(w, nodes, 0);
+		w.write("}\n");
+		toGraphviz(w, nodes, 1);
+		w.write("subgraph output {\n");
+		w.write("  rank = sink;\n");
+		toGraphviz(w, nodes, 2);
+		w.write("}\n");
+
+		w.write("}\n");
+	}
+
+	private void toGraphviz(Writer w, Map<Node, Integer> nodes, int phase) {
+		Set<Node> visited = new HashSet<>();
+		visitIn((node) -> {
+			return visited.add(node);
+		}, (node) -> {
+			try {
+				toGraphviz(w, nodes, node, phase);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			return true;
+		});
+	}
+
 	private Map<Node, Integer> gatherNodes() {
 		HashMap<Node, Integer> nodes = new HashMap<>();
 		visitIn((node) -> {
@@ -197,6 +306,63 @@ public class Graph {
 		return nodes;
 	}
 
+	private void toGraphviz(Writer w, Map<Node, Integer> nodes, Node node,
+			int phase) throws IOException {
+		if (phase == 0) {
+			if (node instanceof InputNode) {
+				w.write("  ");
+				w.write(getGraphvizName(nodes, node)
+						+ " [shape=rectangle label="
+						+ ((InputNode) node).name() + "];\n");
+			}
+		}
+
+		if (phase == 1) {
+			if (node instanceof OutputNode) {
+				w.write("  ");
+				w.write(getGraphvizName(nodes, node.input(0)) + " -> "
+						+ getGraphvizName(nodes, node) + ";\n");
+			}
+			if (node instanceof AndNode) {
+				w.write("  ");
+				w.write(getGraphvizName(nodes, node.input(0)) + " -> "
+						+ getGraphvizName(nodes, node) + ";\n");
+				w.write("  ");
+				w.write(getGraphvizName(nodes, node.input(1)) + " -> "
+						+ getGraphvizName(nodes, node) + ";\n");
+				w.write("  ");
+				w.write(getGraphvizName(nodes, node)
+						+ " [shape=parallelogram label=and]\n");
+			}
+
+			if (node instanceof XorNode) {
+				w.write("  ");
+				w.write(getGraphvizName(nodes, node.input(0)) + " -> "
+						+ getGraphvizName(nodes, node) + ";\n");
+				w.write("  ");
+				w.write(getGraphvizName(nodes, node.input(1)) + " -> "
+						+ getGraphvizName(nodes, node) + ";\n");
+				w.write("  ");
+				w.write(getGraphvizName(nodes, node)
+						+ " [shape=ellipse label=xor]\n");
+			}
+
+			if (node instanceof NotNode) {
+				w.write("  ");
+				w.write(getGraphvizName(nodes, node.input(0)) + " -> "
+						+ getGraphvizName(nodes, node) + " [shape=triangle label=not]\n");
+			}
+		}
+
+		if (phase == 2) {
+			if (node instanceof OutputNode) {
+				w.write("  ");
+				w.write(getGraphvizName(nodes, node) + " [label="
+						+ ((OutputNode) node).name() + "];\n");
+			}
+		}
+	}
+
 	private void toC(Writer w, Map<Node, Integer> nodes, Node node)
 			throws IOException {
 		if (node instanceof InputNode) {
@@ -205,7 +371,7 @@ public class Graph {
 
 		if (node instanceof OutputNode) {
 			w.write(getCName(nodes, node) + " = "
-					+ getCName(nodes, node.input(0)) + "\n");
+					+ getCName(nodes, node.input(0)) + ";\n");
 		}
 
 		if (node instanceof AndNode) {
@@ -216,7 +382,7 @@ public class Graph {
 
 		if (node instanceof XorNode) {
 			w.write(getCName(nodes, node) + " = "
-					+ getCName(nodes, node.input(0)) + " & "
+					+ getCName(nodes, node.input(0)) + " ^ "
 					+ getCName(nodes, node.input(1)) + "\n");
 		}
 
@@ -232,5 +398,13 @@ public class Graph {
 		if (node instanceof OutputNode)
 			return "output[" + outputs.indexOf(node) + "]";
 		return "temp[" + nodes.get(node) + "]";
+	}
+
+	private String getGraphvizName(Map<Node, Integer> nodes, Node node) {
+		if (node instanceof InputNode)
+			return "in_" + inputs.indexOf(node) + "";
+		if (node instanceof OutputNode)
+			return "out_" + outputs.indexOf(node) + "";
+		return "temp_" + nodes.get(node);
 	}
 }

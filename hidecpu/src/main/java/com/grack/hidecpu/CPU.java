@@ -101,25 +101,21 @@ public class CPU implements Engine {
 		Word branch_type = cmd.bits(10, 8);
 
 		// Load arg is a constant, a constant read or a register-relative read
+		Word addr00 = pc;
 		Word addr01 = cmd_param;
 		Word addr10 = r0.add(cmd_param);
 		Word addr11 = r1.add(cmd_param);
-
-		Word read00 = cmd_param;
-		Word read01 = memoryRead(state, memory, addr01, 8);
-		Word read10 = memoryRead(state, memory, addr10, 8);
-		Word read11 = memoryRead(state, memory, addr11, 8);
 
 		state.debug("cmd:", cmd);
 		state.debug("cmd_param:", cmd_param, "cmd_source:", cmd_source,
 				"cmd_target:", cmd_target);
 
-		Word source_arg = cmd_source.bit(1).ifThen(
-				cmd_source.bit(0).ifThen(read11, read10),
-				cmd_source.bit(0).ifThen(read01, read00));
+		Word source_arg = memoryRead(state, memory, cmd_source.bit(1).ifThen(
+				cmd_source.bit(0).ifThen(addr11, addr10),
+				cmd_source.bit(0).ifThen(addr01, addr00)), 8);
 
-		state.debug("src00:", read00, "src01:", read01, "src10:", read10,
-				"src11:", read11);
+		state.debug("addr00:", addr00, "addr01:", addr01, "addr10:", addr10,
+				"addr11:", addr11);
 
 		Word target_arg = cmd_target.bit(0).ifThen(r1, r0);
 
