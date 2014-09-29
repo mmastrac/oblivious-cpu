@@ -1,0 +1,8 @@
+Usage:
+  hidecpu run <asm-or-obj-file> [--ticks=<ticks>] [--debug]
+  hidecpu assemble <asm-file> [-o <object-file>]
+  hidecpu pretty <asm-file> [-o <pretty-asm-file>] [--process-labels]
+
+Options:
+  -h --help  Show help
+  --debug    Enable debugging where possible
