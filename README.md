@@ -1,4 +1,4 @@
-oblivious-cpu
+oblivious-cpu [![Build Status](https://travis-ci.org/mmastrac/oblivious-cpu.svg?branch=master)](https://travis-ci.org/mmastrac/oblivious-cpu)
 =============
 
 Two CPUs based on Fully Homomorphic Encryption ([Wikipedia](https://en.wikipedia.org/wiki/Homomorphic_encryption#Fully_homomorphic_encryption)).
