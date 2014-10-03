@@ -64,6 +64,15 @@ Examples:
 cmp
 ===
 
+Compares the source and target registers, setting the minus, and zero flags appropriately.
+
+Examples:
+
+```
+cmp r0, [r0+10] 
+    => minus = r0 < *(r0 + 10), zero = r0 == *(r0 + 10)
+```
+
 sec/clc
 =======
 
@@ -110,7 +119,7 @@ Machine Opcodes
 15 unused for now
 ```
 
-````
+```
 # Load indirect
 mov r0, [r0]
 mov r0, label    \_ same encoding (load)
