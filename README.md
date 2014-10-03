@@ -3,7 +3,7 @@ oblivious-cpu [![Build Status](https://travis-ci.org/mmastrac/oblivious-cpu.svg?
 
 Two CPUs based on Fully Homomorphic Encryption ([Wikipedia](https://en.wikipedia.org/wiki/Homomorphic_encryption#Fully_homomorphic_encryption)).
 
-1) A novel multiple-register CPU, HideCPU.
+1) HideCPU: a novel four-register, byte-based CPU.
 
 To run:
 
@@ -13,7 +13,7 @@ To run:
     # Run the credit-card check digit test
     bin/hidecpu.sh run hidecpu/samples/creditcard.asm
 
-2) A re-implementation of [ShapeCPU](https://hcrypt.com/shape-cpu/), as well as a number of optimizations.
+2) A re-implementation of [ShapeCPU](https://hcrypt.com/shape-cpu/) with a number of optimizations.
 
 To run:
 
