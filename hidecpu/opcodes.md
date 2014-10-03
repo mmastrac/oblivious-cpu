@@ -1,3 +1,9 @@
+HideCPU
+=======
+
+The HideCPU has four eight-bit registers: r0-r3. r0 and r1 can be used for relative addressing and loads, while
+r2 and r3 are for arithmetic only.
+
 Opcode layout
 =============
 
