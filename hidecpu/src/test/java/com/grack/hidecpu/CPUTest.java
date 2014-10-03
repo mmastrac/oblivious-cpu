@@ -64,7 +64,7 @@ public class CPUTest {
 		CPU cpu = new CPU();
 		LightBitFactory factory = new LightBitFactory();
 		StateFactory stateFactory = new StandardStateFactory(factory,
-				initialState, true);
+				initialState, false);
 		State state = stateFactory.createState();
 		cpu.initialize(factory, stateFactory);
 		long lastPc = -1;

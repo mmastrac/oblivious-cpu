@@ -15,6 +15,7 @@ import com.grack.hidecpu.assembler.Parser;
 import com.grack.hidecpu.assembler.Program;
 import com.grack.homomorphic.light.LightBitFactory;
 import com.grack.homomorphic.light.StandardStateFactory;
+import com.grack.homomorphic.light.WordArrayDumper;
 import com.grack.homomorphic.ops.State;
 import com.grack.homomorphic.ops.Word;
 
@@ -99,12 +100,9 @@ public class Main {
 		}
 
 		Word[] memory = state.getWordArrayRegister("memory");
-		for (int i = 0; i < memory.length; i++) {
-			Word mem = memory[i].and(factory.encodeWord(0xff, 8));
-			System.err.println(String.format("%08x: %s  %s", i, mem,
-					factory.extract(mem)));
-		}
 
+		WordArrayDumper.dump(factory, memory);
+		
 		System.err.println("XOR count = " + factory.getXorCount());
 		System.err.println("AND count = " + factory.getAndCount());
 	}

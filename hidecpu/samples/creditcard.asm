@@ -7,7 +7,7 @@ doubler:
 	mov r1, rol [data + r0]
 	cmp r1, 10
 	blt no_sub
-# if n * 2 >= 10, we sum the sum of the digits instead of n
+	# if n * 2 >= 10, we sum the sum of the digits instead of n
 	sub r1, 9
 no_sub:
 	clc
