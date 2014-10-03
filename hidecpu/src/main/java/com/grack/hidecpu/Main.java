@@ -1,6 +1,5 @@
 package com.grack.hidecpu;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -12,7 +11,6 @@ import org.docopt.Docopt;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.grack.hidecpu.assembler.Compiler;
-import com.grack.hidecpu.assembler.Opcode;
 import com.grack.hidecpu.assembler.Parser;
 import com.grack.hidecpu.assembler.Program;
 import com.grack.homomorphic.light.LightBitFactory;
@@ -57,8 +55,9 @@ public class Main {
 		if (ticks == -1)
 			System.err.println("Running " + file + " until complete");
 		else
-			System.err.println("Running " + file + " for " + ticks + " tick(s)");
-		
+			System.err
+					.println("Running " + file + " for " + ticks + " tick(s)");
+
 		Map<String, Object> initialState = new HashMap<>();
 
 		if (file.endsWith(".asm")) {
@@ -92,7 +91,8 @@ public class Main {
 			cpu.tick(state);
 			long pc = factory.extract(state.getWordRegister("pc"));
 			if (ticks == -1 && pc == lastPc) {
-				System.err.println("Complete after " + actualTicks + " tick(s)");
+				System.err
+						.println("Complete after " + actualTicks + " tick(s)");
 				break;
 			}
 			lastPc = pc;
@@ -100,11 +100,9 @@ public class Main {
 
 		Word[] memory = state.getWordArrayRegister("memory");
 		for (int i = 0; i < memory.length; i++) {
-			if (factory.extract(memory[i].bits(14, 11)) == Opcode.DATA.ordinal()) {
-				Word mem = memory[i].and(factory.encodeWord(0xff, 8));
-				System.err.println(String.format("%08x: %s  %s", i, mem,
-						factory.extract(mem)));
-			}
+			Word mem = memory[i].and(factory.encodeWord(0xff, 8));
+			System.err.println(String.format("%08x: %s  %s", i, mem,
+					factory.extract(mem)));
 		}
 
 		System.err.println("XOR count = " + factory.getXorCount());
@@ -141,7 +139,8 @@ public class Main {
 		compiler.compile(program);
 
 		program.getLines().forEach((line) -> {
-			out.println(encode(15, line.assemble()));
+			for (int i : line.assemble())
+				out.println(encode(8, i));
 		});
 	}
 

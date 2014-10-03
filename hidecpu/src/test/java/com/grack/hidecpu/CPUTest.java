@@ -47,6 +47,19 @@ public class CPUTest {
 	}
 
 	@Test
+	public void runTicks3() {
+		CPU cpu = new CPU();
+		LightBitFactory factory = new LightBitFactory();
+		StateFactory stateFactory = new StandardStateFactory(factory,
+				initialState, false);
+		State state = stateFactory.createState();
+		cpu.initialize(factory, stateFactory);
+		cpu.tick(state);
+		cpu.tick(state);
+		cpu.tick(state);
+	}
+
+	@Test
 	public void runUntilDone() {
 		CPU cpu = new CPU();
 		LightBitFactory factory = new LightBitFactory();
@@ -59,13 +72,13 @@ public class CPUTest {
 			cpu.tick(state);
 			long pc = factory.extract(state.getWordRegister("pc"));
 			if (pc == lastPc) {
-				dumpMemory(factory, state);
+//				dumpMemory(factory, state);
 
 				System.out.println("XOR count = " + factory.getXorCount());
 				System.out.println("AND count = " + factory.getAndCount());
 				return;
 			}
-			
+
 			lastPc = pc;
 		}
 
@@ -94,10 +107,19 @@ public class CPUTest {
 		Word[] memory = state.getWordArrayRegister("memory");
 		for (int j = 0; j < memory.length; j++) {
 			long mem = factory.extract(memory[j]) & 0xff;
-			if (factory.extract(memory[j].bits(14, 11)) == Opcode.DATA
-					.ordinal())
-				System.out.println(String.format("%3d: %s %5d", j,
-						memory[j].toString(), mem));
+			System.out.println(String.format("%3d: %s %5d", j,
+					memory[j].toString(), mem));
+		}
+	}
+
+	public static void main(String[] args) {
+		boolean[] bools = new boolean[] { false, true };
+		for (boolean a : bools) {
+			for (boolean b : bools) {
+				for (boolean c : bools) {
+					System.out.println(a + " " + b + " " + c + ": " + ((a && b) ^ (a && c)) + " " + (a && (b ^ c)));
+				}
+			}
 		}
 	}
 }

@@ -1,6 +1,7 @@
 package com.grack.homomorphic.ops;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ObjectArrays;
 
 public class Word {
 	private Bit[] bits;
@@ -9,10 +10,30 @@ public class Word {
 		this.bits = bits;
 	}
 
+	/**
+	 * Optimization for adding a bit to a word.
+	 */
 	public Word add(Bit b) {
 		Preconditions.checkNotNull(b);
 
-		return add(new Word(new Bit[] { b }));
+		int size = Math.max(size(), 1);
+		Bit[] bits = new Bit[size];
+
+		Bit carry = null;
+		for (int i = 0; i < size; i++) {
+			BitAndBit result;
+
+			if (i == 0) {
+				result = bit(i).halfAdd(b);
+			} else {
+				result = bit(i).halfAdd(carry);
+			}
+
+			carry = result.getBit2();
+			bits[i] = result.getBit1();
+		}
+
+		return new Word(bits);
 	}
 
 	public WordAndBit addWithCarry(Word n, Bit carry) {
@@ -174,9 +195,23 @@ public class Word {
 		return new Word(bits);
 	}
 
-	public Word shl(int n) {
-		Bit[] bits = new Bit[size()];
-		System.arraycopy(this.bits, 0, bits, n, size() - n);
+	/**
+	 * Shifts a word left, filling in the bottom bits with the fill param.
+	 */
+	public Word shl(int n, Bit fill) {
+		Bit[] bits = new Bit[size() + n];
+		System.arraycopy(this.bits, 0, bits, n, size());
+		for (int i = 0; i < n; i++)
+			bits[i] = fill;
+		return new Word(bits);
+	}
+
+	/**
+	 * Shifts a word right, reducing the size of the word and lopping off bits.
+	 */
+	public Word shr(int n) {
+		Bit[] bits = new Bit[size() - n];
+		System.arraycopy(this.bits, n, bits, 0, size() - n);
 		return new Word(bits);
 	}
 
@@ -196,6 +231,14 @@ public class Word {
 		return new Word(bits);
 	}
 
+	/**
+	 * Concatenates two words. The argument becomes the higher bits.
+	 */
+	public Word concat(Word other) {
+		Bit[] bits = ObjectArrays.concat(this.bits, other.bits, Bit.class);
+		return new Word(bits);
+	}
+	
 	public int size() {
 		return bits.length;
 	}

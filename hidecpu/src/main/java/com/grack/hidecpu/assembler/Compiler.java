@@ -35,12 +35,14 @@ public class Compiler {
 				indexes.put(line.getLabel(), lineNumber);
 				line.setLabel(null);
 			}
-			lineNumber++;
+			lineNumber += line.size();
 		}
 
+		lineNumber = 0;
 		for (int i = 0; i < lines.size(); i++) {
-			indexes.put("pc", i);
+			indexes.put("pc", lineNumber);
 			updateValue(indexes, lines.get(i).getValue());
+			lineNumber += lines.get(i).size();
 		}
 	}
 

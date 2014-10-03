@@ -129,12 +129,12 @@ public class CPU implements Engine {
 
 		// ROR
 		Bit carry_ror = ac.bit(0);
-		Word b_ror = ac.bits(7, 1);
+		Word b_ror = ac.shr(1);
 		b_ror = b_ror.setBit(7, alu_carry);
 
 		// ROL
 		Bit carry_rol = ac.bit(7);
-		Word b_rol = ac.bits(6, 0).shl(1);
+		Word b_rol = ac.bits(6, 0).shl(1, null); // null fill, since we're using alu_carry
 		b_rol = b_rol.setBit(0, alu_carry);
 
 		// ADD

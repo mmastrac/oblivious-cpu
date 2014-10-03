@@ -135,6 +135,34 @@ public class WordTest {
 	}
 
 	@Test
+	public void addBit1() {
+		Word a = factory.encodeWord(0b101010L, 32);
+
+		assertEquals(0b101010, factory.extract(a.add(factory.encodeBit(0))));
+	}
+
+	@Test
+	public void addBit2() {
+		Word a = factory.encodeWord(0b101010L, 32);
+
+		assertEquals(0b101011, factory.extract(a.add(factory.encodeBit(1))));
+	}
+
+	@Test
+	public void addBit3() {
+		Word a = factory.encodeWord(0b111111L, 32);
+
+		assertEquals(0b111111L, factory.extract(a.add(factory.encodeBit(0))));
+	}
+
+	@Test
+	public void addBit4() {
+		Word a = factory.encodeWord(0b111111L, 32);
+
+		assertEquals(0b1000000, factory.extract(a.add(factory.encodeBit(1))));
+	}
+
+	@Test
 	public void addWithCarry1() {
 		Word a = factory.encodeWord(0b101010L, 6);
 		Word b = factory.encodeWord(0b010101L, 6);
@@ -174,6 +202,19 @@ public class WordTest {
 		assertEquals(1, factory.extract(r.getBit()));
 	}
 
+	@Test
+	public void shl() {
+		Word a = factory.encodeWord(0b101111L, 6);
+		assertEquals(0b1011110, factory.extract(a.shl(1, zero)));
+		assertEquals(0b1011111, factory.extract(a.shl(1, one)));
+	}
+	
+	@Test
+	public void shr() {
+		Word a = factory.encodeWord(0b101111L, 6);
+		assertEquals(0b010111, factory.extract(a.shr(1)));
+	}
+	
 	@Test
 	public void ifThen() {
 		assertEquals(1, factory.extract(one.ifThen(one, zero)));

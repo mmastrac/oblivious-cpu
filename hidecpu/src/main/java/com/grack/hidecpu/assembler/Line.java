@@ -91,15 +91,20 @@ public class Line {
 		return label == null && opcode == null;
 	}
 
-	public int assemble() {
-		int asm = 0;
-		asm |= opcode.ordinal() << 11;
-		asm |= (branchType == null) ? 0 : (branchType.ordinal() << 8);
-		asm |= (target == null) ? 0 : (target.ordinal() << 10);
-		asm |= (source == null) ? 0 : (source.ordinal() << 8);
-		asm |= (int) (value == null ? 0 : value.getValue());
+	public int[] assemble() {
+		if (opcode == Opcode.DATA)
+			return new int[] { (Integer)value.getValue() };
+		
+		int op = 0;
+		op |= opcode.ordinal() << 4;
+		op |= (branchType == null) ? 0 : (branchType.ordinal() << 0);
+		op |= (target == null) ? 0 : (target.ordinal() << 2);
+		op |= (source == null) ? 0 : (source.ordinal() << 0);
+		
+		int val = 0;
+		val |= (int) (value == null ? 0 : value.getValue());
 
-		return asm;
+		return new int[] { val, op };
 	}
 
 	@Override
@@ -172,5 +177,11 @@ public class Line {
 		}
 
 		return s;
+	}
+
+	public int size() {
+		if (opcode == null)
+			return 0;
+		return opcode == Opcode.DATA ? 1 : 2;
 	}
 }

@@ -16,7 +16,8 @@ public class Program {
 		ArrayList<Integer> program = new ArrayList<Integer>();
 		for (Line line : lines) {
 			if (line.getOpcode() != null)
-				program.add(line.assemble());
+				for (int i : line.assemble())
+					program.add(i);
 		}
 		
 		return Ints.toArray(program);

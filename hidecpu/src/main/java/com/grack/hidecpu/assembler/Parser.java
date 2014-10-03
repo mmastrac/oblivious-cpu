@@ -172,9 +172,13 @@ public class Parser {
 		} else {
 			// Register load
 			if (src.equals("r0"))
-				return new Value(254);
-			if (src.equals("r1"))
 				return new Value(255);
+			if (src.equals("r1"))
+				return new Value(254);
+			if (src.equals("r2"))
+				return new Value(253);
+			if (src.equals("r3"))
+				return new Value(252);
 			return parseValue(src);
 		}
 	}
@@ -199,7 +203,7 @@ public class Parser {
 				return OpSource.CONSTANT_LOAD;
 			}
 		} else {
-			if (src.equals("r0") || src.equals("r1"))
+			if (src.equals("r0") || src.equals("r1") || src.equals("r2") || src.equals("r3"))
 				return OpSource.CONSTANT_LOAD;
 
 			return OpSource.CONSTANT;
