@@ -1,13 +1,14 @@
 package com.grack.homomorphic.fhe;
 
-import java.math.BigInteger;
-
+import org.jscience.mathematics.function.Constant;
 import org.jscience.mathematics.function.Polynomial;
 import org.jscience.mathematics.function.Term;
 import org.jscience.mathematics.function.Variable;
 import org.jscience.mathematics.number.LargeInteger;
 
 public class FheMath {
+	public static final Polynomial<LargeInteger> ZERO_POLY = Constant.valueOf(LargeInteger.ZERO);
+
 	/**
 	 * Slow, recursive determinant.
 	 * 
@@ -54,8 +55,7 @@ public class FheMath {
 		for (int i = 0; i < n; ++i) {
 			int k = i;
 			for (int j = i + 1; j < n; ++j) {
-				if (b[k][i].isZero() || !b[j][i].isZero()
-						&& b[k][i].abs().compareTo(b[j][i].abs()) > 0) {
+				if (b[k][i].isZero() || !b[j][i].isZero() && b[k][i].abs().compareTo(b[j][i].abs()) > 0) {
 					k = j;
 				}
 			}
@@ -71,8 +71,7 @@ public class FheMath {
 			for (int j = i + 1; j < n; ++j)
 				if (!b[j][i].isZero()) {
 					for (int p = i + 1; p < n; ++p) {
-						b[j][p] = b[j][p].times(b[i][i]).minus(
-								b[i][p].times(b[j][i]));
+						b[j][p] = b[j][p].times(b[i][i]).minus(b[i][p].times(b[j][i]));
 					}
 					--pow[i];
 				}
@@ -92,8 +91,8 @@ public class FheMath {
 	/**
 	 * Compute the determinant of the Sylvester Matrix.
 	 */
-	public static LargeInteger resultant(Polynomial<LargeInteger> a,
-			Polynomial<LargeInteger> b, Variable<LargeInteger> v) {
+	public static LargeInteger resultant(Polynomial<LargeInteger> a, Polynomial<LargeInteger> b,
+			Variable<LargeInteger> v) {
 		int oa = a.getOrder(v);
 		int ob = b.getOrder(v);
 		int order = oa + ob;
@@ -124,4 +123,39 @@ public class FheMath {
 		return determinantFast(rows);
 	}
 
+	public static Polynomial<LargeInteger> gcdEuclidean(Polynomial<LargeInteger> a, Polynomial<LargeInteger> b,
+			Variable<LargeInteger> v) {
+		boolean isZeroA = a.equals(ZERO_POLY);
+		boolean isZeroB = b.equals(ZERO_POLY);
+
+		if (isZeroA) {
+			if (isZeroB) {
+				return ZERO_POLY;
+			} else {
+				return monic(b, v);
+			}
+		} else if (isZeroB) {
+			return monic(a, v);
+		}
+
+		throw new RuntimeException("unimplemented");
+	}
+
+	public static Polynomial<LargeInteger> monic(Polynomial<LargeInteger> in, Variable<LargeInteger> v) {
+		LargeInteger coefficient = in.getCoefficient(Term.valueOf(v, in.getOrder(v)));
+		if (coefficient.equals(1))
+			return in;
+
+		return divide(in, coefficient, v);
+	}
+
+	public static Polynomial<LargeInteger> divide(Polynomial<LargeInteger> in, LargeInteger divisor,
+			Variable<LargeInteger> v) {
+		Polynomial<LargeInteger> out = null;
+		for (Term t : in.getTerms()) {
+			Polynomial<LargeInteger> p = Polynomial.valueOf(in.getCoefficient(t).divide(divisor), t);
+			out = out == null ? p : out.plus(p);
+		}
+		return out == null ? Constant.valueOf(LargeInteger.ZERO) : out;
+	}
 }
