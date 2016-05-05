@@ -1,7 +1,6 @@
 # double every second digit
 	mov r0, 15
 doubler:
-	clc
 	add r2, [data + r0]
 	sub r0, 1
 	mov r1, rol [data + r0]
@@ -10,9 +9,7 @@ doubler:
 	# if n * 2 >= 10, we sum the sum of the digits instead of n
 	sub r1, 9
 no_sub:
-	clc
 	add r2, r1
-	mov [data + r0], r1
 	loop r0, doubler
 
 	mov [sum], r2

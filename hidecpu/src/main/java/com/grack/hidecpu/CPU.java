@@ -168,8 +168,7 @@ public class CPU implements Engine {
 
 		// ROL
 		Bit carry_rol = source_arg.bit(7);
-		Word b_rol = source_arg.bits(6, 0).shl(1, null); // null fill, since we're using alu_carry
-		b_rol = b_rol.setBit(0, alu_carry);
+		Word b_rol = source_arg.bits(6, 0).shl(1, alu_carry);
 
 		// ADD
 		WordAndBit add = target_arg.addWithCarry(source_arg, alu_carry);
