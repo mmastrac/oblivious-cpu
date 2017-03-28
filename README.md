@@ -7,6 +7,7 @@ Two CPUs based on Fully Homomorphic Encryption ([Wikipedia](https://en.wikipedia
 
 To run:
 
+    git clone --recursive https://github.com/mmastrac/oblivious-cpu.git
     bin/build.sh
     # Run the sort test
     bin/hidecpu.sh run hidecpu/samples/sort.asm
@@ -17,6 +18,7 @@ To run:
 
 To run:
 
+    git clone --recursive https://github.com/mmastrac/oblivious-cpu.git
     bin/build.sh
     # Run the sort test
     bin/shapecpu.sh run shapecpu/samples/sort.asm
