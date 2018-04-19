@@ -22,31 +22,19 @@ import com.grack.homomorphic.ops.WordAndBit;
  * are byte-wise.
  */
 public class CPU implements Engine {
-	private static final String ALU_CARRY = "alu_carry";
-	private static final String ALU_MINUS = "alu_minus";
-	private static final String ALU_ZERO = "alu_zero";
-	public static final String PC = "pc";
 	public static final String MEMORY_DATA = "memory_data";
 	public static final String MEMORY_CODE = "memory_code";
-	private static final int R0 = 255;
-	private static final int R1 = 254;
-	private static final int R2 = 253;
-	private static final int R3 = 252;
-	private static final int FLAGS = 251;
+	public static final String MEMORY_REG = "memory_reg";
 
 	private static final int MEMORY_WIDTH = 8;
+	private static final int REGISTER_WIDTH = 8;
 
 	public CPU() {
 	}
 
 	@Override
 	public void initialize(NativeBitFactory factory, StateFactory stateFactory) {
-		stateFactory.allocateBitRegister(ALU_CARRY);
-		stateFactory.allocateBitRegister(ALU_MINUS);
-		stateFactory.allocateBitRegister(ALU_ZERO);
-
-		stateFactory.allocateWordRegister(PC, 8);
-
+		stateFactory.allocateWordArrayRegister(MEMORY_REG, REGISTER_WIDTH, 8);
 		stateFactory.allocateWordArrayRegister(MEMORY_CODE, MEMORY_WIDTH, 256);
 		stateFactory.allocateWordArrayRegister(MEMORY_DATA, MEMORY_WIDTH, 256);
 	}

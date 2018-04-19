@@ -35,6 +35,16 @@ public class LoggingBit implements NativeBit {
 		return bitFactory.create(null, LoggingBitNodeType.NOT,
 				new int[] { this.nodeIndex });
 	}
+	
+	@Override
+	public NativeBit one() {
+		return bitFactory.encodeNativeBit(1);
+	}
+	
+	@Override
+	public NativeBit zero() {
+		return bitFactory.encodeNativeBit(0);
+	}
 
 	public String describe() {
 		switch (type) {

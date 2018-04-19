@@ -127,9 +127,17 @@ public class WordTest {
 	}
 
 	@Test
-	public void add3() {
+	public void add3a() {
 		Word a = factory.encodeWord(0b110111L, 10);
 		Word b = factory.encodeWord(0b000001L, 10);
+
+		assertEquals(0b111000, factory.extract(a.add(b)));
+	}
+
+	@Test
+	public void add3b() {
+		Word a = factory.encodeWord(0b110111L, 10);
+		Word b = factory.encodeWord(0b000001L, 1);
 
 		assertEquals(0b111000, factory.extract(a.add(b)));
 	}
@@ -277,5 +285,109 @@ public class WordTest {
 				factory.extract(a11),
 				factory.extract(factory.encodeWord(0b11, 2).decode(a00, a01,
 						a10, a11)));
+	}
+	
+	@Test
+	public void multiply8x8() {
+		for (int i = 0; i < 255; i++) {
+			for (int j = 0; j < 255; j++) {
+				Word w1 = factory.encodeWord(j, 8);
+				Word w2 = factory.encodeWord(i, 8);
+				
+				Word mul = w1.multiplyDadda(w2);
+				assertEquals("(" + j + "*" + i + ") incorrect", (j * i) & 0xffff, factory.extract(mul));
+			}
+		}
+	}
+
+	@Test
+	public void multiply8x8Signed() {
+		for (int i = -128; i <= 127; i++) {
+			for (int j = -128; j <= 127; j++) {
+				Word w1 = factory.encodeWord(j & 0xff, 8);
+				Word w2 = factory.encodeWord(i & 0xff, 8);
+				
+				Word mul = w1.multiplyDadda(w2, true);
+				assertEquals("(" + j + "*" + i + ") incorrect", (j * i) & 0xffff, factory.extract(mul));
+			}
+		}
+	}
+
+	@Test
+	public void multiply8x8SignedOrUnsigned() {
+		for (int i = -128; i <= 127; i++) {
+			for (int j = -128; j <= 127; j++) {
+				Word w1 = factory.encodeWord(j & 0xff, 8);
+				Word w2 = factory.encodeWord(i & 0xff, 8);
+				
+				Word mul = w1.multiplyDadda(w2, factory.encodeBit(1));
+				assertEquals("(" + j + "*" + i + ") incorrect", (j * i) & 0xffff, factory.extract(mul));
+			}
+		}
+		
+		for (int i = 0; i < 255; i++) {
+			for (int j = 0; j < 255; j++) {
+				Word w1 = factory.encodeWord(j, 8);
+				Word w2 = factory.encodeWord(i, 8);
+				
+				Word mul = w1.multiplyDadda(w2, factory.encodeBit(0));
+				assertEquals("(" + j + "*" + i + ") incorrect", (j * i) & 0xffff, factory.extract(mul));
+			}
+		}
+	}
+
+	@Test
+	public void multiply8x8InParts() {
+		for (int i = 0; i < 255; i++) {
+			for (int j = 0; j < 255; j++) {
+				Word w1 = factory.encodeWord(j, 8);
+				Word w2 = factory.encodeWord(i, 8);
+				
+				Word out1 = w1.multiplyDadda(w2.bits(3, 0));
+				Word out2 = w1.multiplyDadda(w2.bits(7, 4));
+				
+				Word mul = out2.shl(4, factory.encodeBit(0)).add(out1);
+
+				assertEquals("(" + j + "*" + i + ") incorrect", (j * i) & 0xffff, factory.extract(mul));
+			}
+		}
+	}
+	
+	@Test
+	public void multiply8x4() {
+		for (int i = 0; i < 255; i++) {
+			for (int j = 0; j < 15; j++) {
+				Word w1 = factory.encodeWord(j, 4);
+				Word w2 = factory.encodeWord(i, 8);
+				
+				Word mul1 = w1.multiplyDadda(w2);
+				assertEquals("(" + j + "*" + i + ") incorrect", (j * i) & 0xffff, factory.extract(mul1));
+				
+				Word mul2 = w2.multiplyDadda(w1);
+				assertEquals("(" + j + "*" + i + ") incorrect", (j * i) & 0xffff, factory.extract(mul2));
+			}
+		}
+	}
+
+	@Test
+	public void multiply4x4() {
+		for (int i = 0; i < 15; i++) {
+			for (int j = 0; j < 15; j++) {
+				Word w1 = factory.encodeWord(j, 4);
+				Word w2 = factory.encodeWord(i, 4);
+				
+				Word mul = w1.multiplyDadda(w2);
+				assertEquals("(" + j + "*" + i + ") incorrect", (j * i) & 0xff, factory.extract(mul));
+			}
+		}
+	}
+
+	@Test
+	public void multiply32x32() {
+		Word w1 = factory.encodeWord(0xffff_ffffL, 32);
+		Word w2 = factory.encodeWord(0xffff_ffffL, 32);
+		
+		Word mul1 = w1.multiplyDadda(w2);
+		assertEquals(0xffff_ffffL * 0xffff_ffffL, factory.extract(mul1));
 	}
 }

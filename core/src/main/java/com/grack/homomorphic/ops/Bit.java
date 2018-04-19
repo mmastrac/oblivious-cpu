@@ -76,4 +76,12 @@ public class Bit {
 		
 		return new BitAndBit(ha2.getBit1(), ha1.getBit2().or(ha2.getBit2()));
 	}
+	
+	public Bit one() {
+		return new Bit(nativeBit().one());
+	}
+	
+	public Bit zero() {
+		return new Bit(nativeBit().one());
+	}
 }

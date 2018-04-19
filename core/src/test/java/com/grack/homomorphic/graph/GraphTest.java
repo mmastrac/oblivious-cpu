@@ -1,7 +1,11 @@
 package com.grack.homomorphic.graph;
 
+import static org.junit.Assert.*;
+
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -29,11 +33,66 @@ public class GraphTest {
 		graph.addOutput(out1 = new OutputNode("out1", andNode1));
 		graph.addOutput(out2 = new OutputNode("out2", andNode2));
 
+		assertEquals(3, graph.maxDepth());
 		graph.optimize();
+		assertEquals(2, graph.maxDepth());
 	}
 
 	@Test
 	public void testFullAdd() throws IOException {
+		Graph graph = createAdditionGraph();
+		assertEquals(14, graph.maxDepth());
+		graph.optimize();
+		assertEquals(14, graph.maxDepth());
+
+		try (PrintWriter w = new PrintWriter(System.out)) {
+			graph.toGraphviz(w);
+		}
+	}
+
+	@Test
+	public void testVisitOut() {
+		Graph graph = createAdditionGraph();
+
+		Set<Node> nodes = new HashSet<>();
+		
+		graph.visitOut((node) -> {
+			nodes.add(node);
+			return true;
+		}, null);
+		
+		assertEquals(graph.nodeCount(), nodes.size());
+	}
+
+	@Test
+	public void testVisitIn() {
+		Graph graph = createAdditionGraph();
+
+		Set<Node> nodes = new HashSet<>();
+		
+		graph.visitIn((node) -> {
+			nodes.add(node);
+			return true;
+		}, null);
+		
+		assertEquals(graph.nodeCount(), nodes.size());
+	}
+
+	@Test
+	public void testVisitTopographical() {
+		Graph graph = createAdditionGraph();
+
+		Set<Node> nodes = new HashSet<>();
+		
+		// Should visit once and only once
+		graph.visitTopographical((node) -> {
+			assertTrue(nodes.add(node));
+		});
+		
+		assertEquals(graph.nodeCount(), nodes.size());
+	}
+
+	private Graph createAdditionGraph() {
 		LoggingBitFactory factory = new LoggingBitFactory();
 		Bit carryIn = factory.createNamedInputBit("carry");
 
@@ -58,12 +117,6 @@ public class GraphTest {
 		factory.createNamedOutputBit("outd", result.getWord().bit(0));
 
 		factory.createNamedOutputBit("carry", result.getBit());
-
-		Graph graph = factory.toGraph();
-		// graph.optimize();
-
-		try (PrintWriter w = new PrintWriter(System.out)) {
-			graph.toGraphviz(w);
-		}
+		return factory.toGraph();
 	}
 }

@@ -17,20 +17,22 @@ no_sub:
 	
 	# Now check that the sum % 10 == 0
 check:
-	mov r1, r2
-	# Use the top 5 bits to load the byte
-	shr r1, 3
-	mov r1, [mod10 + r1]
-	# Use the bottom 3 bits to rotate (no need to mask them off - the shifter does) 
-	mov r0, r2
-	rorc r1, r0
+	# Add 10 to r2 so we can omit the zero case
+	add r2, 10
 	
-	bnc fail
+	# r2 * 0x99 -> r0:r1
+	mul r2, 0x99
+	# r0 = (r2 * 0x199) >> 8
+	add r0, r2
+	# If r0 & 0xf == 0xf, this was a multiple of 10
+	and r0, 0xf
+	cmp r0, 0xf
+	bne fail	
 	mov r2, 99
+
 fail:
 	mov [res], r2
 	halt
-	
 
 
 sum:
@@ -41,12 +43,3 @@ res:
 data:
 	# 5497 0365 0216 1618
 	data 5, 4, 9, 7, 0, 3, 6, 5, 0, 2, 1, 6, 1, 6, 1, 8
-
-# We can pre-compute all the valid multiples of 10 to save repeated subtraction
-mod10:
-	data 0x01, 0x04, 0x10, 0x40, 0x00 # 0->39
-	data 0x01, 0x04, 0x10, 0x40, 0x00 # 40->79
-	data 0x01, 0x04, 0x10, 0x40, 0x00 # 80->119
-	data 0x01, 0x04, 0x10, 0x40, 0x00 # 120->159
-	data 0x01, 0x04, 0x10, 0x40, 0x00 # 160->199
-	data 0x01, 0x04, 0x10, 0x40, 0x00 # 200->239

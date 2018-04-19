@@ -33,6 +33,16 @@ public class LightBit implements NativeBit {
 		return new LightBit(factory, scramble(value & other.value));
 	}
 	
+	@Override
+	public NativeBit one() {
+		return factory.encodeNativeBit(1);
+	}
+	
+	@Override
+	public NativeBit zero() {
+		return factory.encodeNativeBit(0);
+	}
+	
 	private int scramble(int value) {
 		return factory.scramble(value);
 	}
