@@ -13,6 +13,7 @@
 		<module>../core</module>
 		<module>../shapecpu</module>
 		<module>../hidecpu</module>
+		<!-- <module>../hidecpu2</module> -->
 	</modules>
 
 	<build>

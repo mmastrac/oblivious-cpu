@@ -1,6 +1,6 @@
 package com.grack.hidecpu;
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -16,7 +16,6 @@ import org.junit.Test;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.grack.hidecpu.assembler.Compiler;
-import com.grack.hidecpu.assembler.Opcode;
 import com.grack.hidecpu.assembler.Parser;
 import com.grack.hidecpu.assembler.Program;
 import com.grack.homomorphic.graph.Graph;
@@ -73,7 +72,8 @@ public class CPUTest {
 			long pc = factory.extract(state.getWordRegister("pc"));
 			if (pc == lastPc) {
 //				dumpMemory(factory, state);
-
+				assertEquals(60, factory.extract(state.getWordArrayRegister("memory")[32]));
+				assertEquals(0, factory.extract(state.getWordArrayRegister("memory")[33]));
 				System.out.println("XOR count = " + factory.getXorCount());
 				System.out.println("AND count = " + factory.getAndCount());
 				return;

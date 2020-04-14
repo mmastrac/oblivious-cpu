@@ -29,7 +29,11 @@ public class LoggingBitFactory implements NativeBitFactory {
 	
 	@Override
 	public NativeBit encodeNativeBit(int bit) {
-		throw new RuntimeException("Not implemented");
+		if (bit == 0)
+			return encodeNamedInputBit("zero");
+		if (bit == 1)
+			return encodeNamedInputBit("one");
+		throw new IllegalArgumentException("bit");
 	}
 
 	public NativeBit encodeNamedInputBit(String name) {

@@ -134,8 +134,7 @@ public class CPU implements Engine {
 
 		// ROL
 		Bit carry_rol = ac.bit(7);
-		Word b_rol = ac.bits(6, 0).shl(1, null); // null fill, since we're using alu_carry
-		b_rol = b_rol.setBit(0, alu_carry);
+		Word b_rol = ac.bits(6, 0).shl(1, alu_carry);
 
 		// ADD
 		WordAndBit add_1 = ac.addWithCarry(cmd_param, alu_carry);

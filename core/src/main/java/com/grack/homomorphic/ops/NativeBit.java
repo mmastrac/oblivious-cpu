@@ -18,4 +18,14 @@ public interface NativeBit {
 	 * Inverts a bit.
 	 */
 	NativeBit not();
+	
+	/**
+	 * Returns a one from the same factory that produced this bit.
+	 */
+	NativeBit one();
+	
+	/**
+	 * Returns a zero from the same factory that produced this bit.
+	 */
+	NativeBit zero();
 }

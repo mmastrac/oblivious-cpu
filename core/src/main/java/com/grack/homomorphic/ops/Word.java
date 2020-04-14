@@ -1,5 +1,8 @@
 package com.grack.homomorphic.ops;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ObjectArrays;
 
@@ -7,6 +10,10 @@ public class Word {
 	private Bit[] bits;
 
 	public Word(Bit[] bits) {
+		Preconditions.checkNotNull(bits);
+		for (Bit bit : bits) {
+			Preconditions.checkNotNull(bit);
+		}
 		this.bits = bits;
 	}
 
@@ -40,52 +47,65 @@ public class Word {
 		Preconditions.checkNotNull(n);
 		Preconditions.checkNotNull(carry);
 
-		int size = Math.max(size(), n.size());
-		Bit[] bits = new Bit[size];
-
-		for (int i = 0; i < size; i++) {
-			BitAndBit result;
-
-			if (i >= size())
-				result = n.bit(i).halfAdd(carry);
-			else if (i >= n.size())
-				result = bit(i).halfAdd(carry);
-			else
-				result = bit(i).fullAdd(n.bit(i), carry);
-
-			carry = result.getBit2();
-			bits[i] = result.getBit1();
-		}
-
-		return new WordAndBit(new Word(bits), carry);
+		return addWithCarry(this.bits, n.bits, carry);
 	}
 
+	/**
+	 * Add, silently ignore carry.
+	 */
 	public Word add(Word n) {
-		Preconditions.checkNotNull(n);
+		return addWithCarry(n).getWord();
+	}
 
-		int size = Math.max(size(), n.size());
+	public WordAndBit addWithCarry(Word n) {
+		Preconditions.checkNotNull(n);
+		return addWithCarry(this.bits, n.bits, null);
+	}
+	
+	/**
+	 * Internal method that supports nullable holes in {@link Bit} arrays. Input
+	 * carry may also be null.
+	 */
+	private WordAndBit addWithCarry(Bit[] w1, Bit[] w2, Bit carry) {
+		int size = Math.max(w1.length, w2.length);
 		Bit[] bits = new Bit[size];
 
-		Bit carry = null;
 		for (int i = 0; i < size; i++) {
 			BitAndBit result;
 
-			if (carry == null) {
-				result = bit(i).halfAdd(n.bit(i));
-			} else {
-				if (i >= size())
-					result = n.bit(i).halfAdd(carry);
-				else if (i >= n.size())
-					result = bit(i).halfAdd(carry);
-				else
-					result = bit(i).fullAdd(n.bit(i), carry);
-			}
+			Bit b1 = i >= w1.length ? null : w1[i];
+			Bit b2 = i >= w2.length ? null : w2[i];
+			
+			result = countBits(b1, b2, carry);
 
 			carry = result.getBit2();
 			bits[i] = result.getBit1();
 		}
 
-		return new Word(bits);
+		return new WordAndBit(new Word(bits), carry);		
+	}
+	
+	private BitAndBit countBits(Bit b1, Bit b2, Bit b3) {
+		List<Bit> bits = new ArrayList<>(3);
+		if (b1 != null)
+			bits.add(b1);
+		if (b2 != null)
+			bits.add(b2);
+		if (b3 != null)
+			bits.add(b3);
+		
+		switch (bits.size()) {
+		case 0:
+			return new BitAndBit(bits.get(0).zero(), null);
+		case 1:
+			return new BitAndBit(bits.get(0), null);
+		case 2:
+			return bits.get(0).halfAdd(bits.get(1));
+		case 3:
+			return bits.get(0).fullAdd(bits.get(1), bits.get(2));
+		}
+		
+		throw new IllegalStateException("Unexpected");
 	}
 
 	public Word and(Word n) {
@@ -238,6 +258,14 @@ public class Word {
 		Bit[] bits = ObjectArrays.concat(this.bits, other.bits, Bit.class);
 		return new Word(bits);
 	}
+
+	/**
+	 * Concatenates a word and a bit. The argument becomes the higher bit.
+	 */
+	public Word concat(Bit other) {
+		Bit[] bits = ObjectArrays.concat(this.bits, new Bit[] { other }, Bit.class);
+		return new Word(bits);
+	}
 	
 	public int size() {
 		return bits.length;
@@ -292,6 +320,158 @@ public class Word {
 		
 		return bit(bit).ifThen(decode(args, start + (1 << bit), bit - 1),
 				decode(args, start, bit - 1));
+	}
+	
+	/**
+	 * Generates a Dadda multiplier (https://en.wikipedia.org/wiki/Dadda_multiplier) for
+	 * this Word and the multiplier.
+	 */
+	public Word multiplyDadda(Word multiplier) {
+		return multiplyDadda(multiplier, false);
+	}
+	
+	/**
+	 * Generates a Dadda multiplier (https://en.wikipedia.org/wiki/Dadda_multiplier) for
+	 * this Word and the multiplier, optionally signed.
+	 */
+	public Word multiplyDadda(Word multiplier, boolean signed) {
+		// Create our weight arrays
+		int outputSize = this.bits.length + multiplier.bits.length - 1;
+		List<List<Bit>> weights = new ArrayList<>(outputSize);
+		for (int i = 0; i < outputSize; i++) {
+			weights.add(new ArrayList<>());
+		}
+		
+		// TODO: This is probably not too tough
+		if (signed && this.bits.length != multiplier.bits.length) {
+			throw new IllegalArgumentException("Only nxn multiplication is supported when signed");
+		}
+		
+		// Populate with ANDs of each bit in each word (n^2)
+		for (int i = 0; i < this.bits.length; i++) {
+			boolean is = i == this.bits.length - 1;
+			for (int j = 0; j < multiplier.bits.length; j++) {
+				boolean js = j == multiplier.bits.length - 1;
+				int weight = i + j;
+				Bit partial = this.bits[i].and(multiplier.bits[j]);
+				if (signed && is ^ js) {
+					partial = partial.not();
+				}
+				weights.get(weight).add(partial);
+			}
+		}
+		
+		// Signed multiplication via subtle manipulation of bits
+		// https://www.dsprelated.com/showarticle/555.php
+		if (signed) {
+			weights.get(this.bits.length).add(this.bits[0].one());
+		}
+		
+		daddaReduce(multiplier, weights);
+		
+		// Build our output row from the remaining weights
+		Bit[] bits1 = new Bit[weights.size()];
+		Bit[] bits2 = new Bit[weights.size()];
+		for (int i = 0; i < weights.size(); i++) {
+			List<Bit> w = weights.get(i);
+			bits1[i] = w.get(0);
+			bits2[i] = w.size() > 1 ? w.get(1) : null;
+		}
+		
+		// Invert the carry bit in the signed case
+		WordAndBit added = addWithCarry(bits1, bits2, null);
+		return added.getWord().concat(signed ? added.getBit().not() : added.getBit());
+	}
+
+	/**
+	 * Generates a Dadda multiplier (https://en.wikipedia.org/wiki/Dadda_multiplier) for
+	 * this Word and the multiplier, optionally signed.
+	 */
+	public Word multiplyDadda(Word multiplier, Bit signed) {
+		// Create our weight arrays
+		int outputSize = this.bits.length + multiplier.bits.length - 1;
+		List<List<Bit>> weights = new ArrayList<>(outputSize);
+		for (int i = 0; i < outputSize; i++) {
+			weights.add(new ArrayList<>());
+		}
+		
+		// TODO: This is probably not too tough
+		if (this.bits.length != multiplier.bits.length) {
+			throw new IllegalArgumentException("Only nxn multiplication is supported when signed");
+		}
+		
+		// Populate with ANDs of each bit in each word (n^2)
+		for (int i = 0; i < this.bits.length; i++) {
+			boolean is = i == this.bits.length - 1;
+			for (int j = 0; j < multiplier.bits.length; j++) {
+				boolean js = j == multiplier.bits.length - 1;
+				int weight = i + j;
+				Bit partial = this.bits[i].and(multiplier.bits[j]);
+				weights.get(weight).add(is ^ js ? signed.ifThen(partial.not(), partial) : partial);
+			}
+		}
+		
+		// Signed multiplication via subtle manipulation of bits
+		// https://www.dsprelated.com/showarticle/555.php
+		weights.get(this.bits.length).add(signed);
+		
+		daddaReduce(multiplier, weights);
+		
+		// Build our output row from the remaining weights
+		Bit[] bits1 = new Bit[weights.size()];
+		Bit[] bits2 = new Bit[weights.size()];
+		for (int i = 0; i < weights.size(); i++) {
+			List<Bit> w = weights.get(i);
+			bits1[i] = w.get(0);
+			bits2[i] = w.size() > 1 ? w.get(1) : null;
+		}
+		
+		// Invert the carry bit in the signed case
+		WordAndBit added = addWithCarry(bits1, bits2, null);
+		return added.getWord().concat(signed.ifThen(added.getBit().not(), added.getBit()));
+	}
+
+	private void daddaReduce(Word multiplier, List<List<Bit>> weights) {
+		// Determine the initial stage based on the max column height
+		int max = Math.max(this.bits.length, multiplier.bits.length);
+		int stage = 1;
+		while (dadda(stage + 1) < max) {
+			stage++;
+		}
+
+		// Now reduce according to the rules
+		for (; stage >= 1; stage--) {
+			max = dadda(stage);
+			for (int i = 0; i < weights.size(); i++) {
+				List<Bit> column = weights.get(i);
+				int columnSize = column.size();
+				while (columnSize > max) {
+					Bit a = column.remove(0);
+					Bit b = column.remove(0);
+					BitAndBit res;
+					if (columnSize == max + 1) {
+						columnSize--;
+						res = a.halfAdd(b);
+					} else {
+						columnSize -= 2;
+						Bit c = column.remove(0);
+						res = a.fullAdd(b, c);
+					}
+					column.add(res.getBit1());
+					weights.get(i + 1).add(res.getBit2());
+				}
+			}
+		}
+	}
+	
+	/**
+	 * See https://en.wikipedia.org/wiki/Dadda_multiplier
+	 */
+	private static int dadda(int n) {
+		if (n == 1)
+			return 2;
+		
+		return (int)(3.0 * dadda(n - 1) / 2.0);
 	}
 
 	@Override

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,6 +40,52 @@ public class Graph {
 			node.visitIn(pre, post);
 		}
 	}
+	
+	public void visitTopographical(UnconditionalNodeVisitor visitor) {
+		Set<Node> s = new HashSet<>();
+		s.addAll(inputs);
+		
+		Map<Node, List<Node>> edges = new HashMap<>();
+		visitOut((node) -> {
+			@SuppressWarnings("unchecked")
+			List<Node> nodes = (List<Node>) node.in.clone();
+			return (edges.put(node, nodes) == null);
+		}, null);
+		
+		while (!s.isEmpty()) {
+			Node n = s.iterator().next();
+			s.remove(n);
+			visitor.visit(n);
+			
+			for (Node m : n.out) {
+				if (!edges.containsKey(m))
+					continue;
+				
+				List<Node> nodeEdges = edges.get(m);
+				nodeEdges.remove(n);
+				
+				if (nodeEdges.size() == 0) {
+					edges.remove(m);
+					s.add(m);
+				}
+			}
+		}
+	}
+	
+	public int maxDepth() {
+		int totalMaxDepth[] = new int[1];
+		Map<Node, Integer> depths = new HashMap<>();
+		visitTopographical((node) -> {
+			int maxDepth = 0;
+			for (Node in : node.in) {
+				maxDepth = Math.max(depths.get(in), maxDepth);
+			}
+			depths.put(node, maxDepth + 1);
+			totalMaxDepth[0] = Math.max(maxDepth, totalMaxDepth[0]);
+		});
+		
+		return totalMaxDepth[0];
+	}
 
 	public int nodeCount() {
 		Set<Node> nodesIn = new HashSet<>();
@@ -56,6 +103,7 @@ public class Graph {
 
 	public void optimize() {
 		int before = nodeCount();
+		int beforeDepth = maxDepth();
 
 		// phase 1: remove nodes with no output
 		removeDeadEndNodes();
@@ -93,8 +141,9 @@ public class Graph {
 		}, null);
 
 		int after = nodeCount();
+		int afterDepth = maxDepth();
 
-		System.out.println(before + " -> " + after);
+		System.out.println(before + "(" + beforeDepth + ") -> " + after + " (" + afterDepth + ")");
 	}
 
 	private void removeDeadEndNodes() {
@@ -144,6 +193,11 @@ public class Graph {
 					int value = constant.value();
 
 					for (Node output : inputNode.outputs()) {
+						if (output instanceof NotNode) {
+							output.replaceWith(constant.not());
+							continue top;
+						}
+						
 						Node otherInput;
 						if (output.input(0) == inputNode) {
 							otherInput = output.input(1);
