@@ -2,4 +2,4 @@ language: java
 before_script:
   - cd parent
 jdk:
-  - oraclejdk8
+  - oraclejdk9
