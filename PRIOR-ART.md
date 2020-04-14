@@ -9,4 +9,8 @@ Prior art:
  64, etc). CPU can continue executing while it waits for the caller to determine halt.
  - Encrypted channel with client. The client can continue to send bundles which are inserted into memory and available to program. The 
  program can also store encrypted values in a given memory location that are streamed to a client at certain intervals.
- 
+ - Client can submit both the program and initial data to a FHE execution server. It may include information to query from a
+ given encrypted database and insert into memory.
+ - Client may include a program, a given number of execution cycles, then a place to store the result in the database after that number
+ of cycles have completed.
+
