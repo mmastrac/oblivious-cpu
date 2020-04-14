@@ -66,9 +66,9 @@
 			<version>1.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>docopt</groupId>
+			<groupId>com.offbytwo</groupId>
 			<artifactId>docopt</artifactId>
-			<version>0.6.1</version>
+			<version>0.6.0.20150202</version>
 		</dependency>
 	</dependencies>
 </project>
