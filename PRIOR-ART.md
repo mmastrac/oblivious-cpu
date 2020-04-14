@@ -13,4 +13,8 @@ Prior art:
  given encrypted database and insert into memory.
  - Client may include a program, a given number of execution cycles, then a place to store the result in the database after that number
  of cycles have completed.
-
+ - Optimizing compiler: provide optimal gates for system + cost, compiler can choose fundamental gates to optimize system for
+ - Automatic pipelining for larger CPUs. Slice the gate graph into equal bits so that we can reduce the input-to-output path length.
+    - Automatically fetch ahead assuming PC increments
+ - PC that increments using a gray code system to avoid paying for additions
+ - CPU that you can configure parametrically - bit size, register count, etc. Automatically optimize for that setup.
