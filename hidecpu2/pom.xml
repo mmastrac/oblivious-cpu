@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>hidecpu2</artifactId>
 	<packaging>jar</packaging>
-	<name>hidecpu</name>
+	<name>hidecpu2</name>
 	<url>http://maven.apache.org</url>
 
 	<properties>
