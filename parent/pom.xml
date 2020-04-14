@@ -10,7 +10,6 @@
 	<name>Oblivious CPU Parent</name>
 
 	<modules>
-		<module>../docopt</module>
 		<module>../core</module>
 		<module>../shapecpu</module>
 		<module>../hidecpu</module>
