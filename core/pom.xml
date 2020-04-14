@@ -44,7 +44,7 @@
 			<version>17.0</version>
 		</dependency>
 		<dependency>
-			<groupId>org.docopt</groupId>
+			<groupId>docopt</groupId>
 			<artifactId>docopt</artifactId>
 			<version>0.6.1</version>
 		</dependency>
